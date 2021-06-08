@@ -63,3 +63,15 @@ Opening OGG, FLAC and WAV files with Multichannels
 Converting Audiofiles to old BlitzMax TAudioSample TSound objects  
 New extended TAudioSample object with multichannel and 32bit samples  
 Save WAV-files in various formats upto 32 tracks 
+
+
+
+# Functions and Methods
+
+## Type TMiniAudio:
+
+### OpenDevice 
+Opens the Device.
+  
+### OpenDevice_II 
+Same as OpenDevice, but with independent parameters for Capture and Playback:  
