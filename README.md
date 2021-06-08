@@ -44,3 +44,22 @@ End Function
 
 
 ```
+# Device Features:
+Audio-Playback and Recording with low latency below 30msec  
+Realtime Samples access of already playing samples  
+Playback and Capture MONO STEREO, 3-32 tracks  
+Full Duplex: Capture and Playback at the same time  
+Loopback: Record what is "on the speakers"  
+All backend devices on all plattforms are supported incl. WASAPI on Windows  
+access to USB hardware devices with upto 32 capture/playback channels  
+Formats: 8bit, 16bit, 32bit and 32bit-float  
+Samples-Rates from 8kHz-192kHzHz  
+CallBack-Access, Multithread 
+
+# File Features:
+ 
+Opening MP3, OGG, FLAC and WAV files with Audioformats bejond 16bit  
+Opening OGG, FLAC and WAV files with Multichannels  
+Converting Audiofiles to old BlitzMax TAudioSample TSound objects  
+New extended TAudioSample object with multichannel and 32bit samples  
+Save WAV-files in various formats upto 32 tracks 
