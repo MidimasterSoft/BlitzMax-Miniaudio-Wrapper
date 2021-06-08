@@ -74,4 +74,71 @@ Save WAV-files in various formats upto 32 tracks
 Opens the Device.
   
 ### OpenDevice_II 
-Same as OpenDevice, but with independent parameters for Capture and Playback:  
+Same as OpenDevice, but with independent parameters for Capture and Playback.  
+
+### StartDevice
+Starts the Device. 
+ 
+### StopDevice 
+Stops the Device.
+  
+### CloseDevice
+Close the Device.
+  
+### PlaybackDevices
+Lists all avaiable Playback Devices.
+  
+### CaptureDevices 
+Lists all avaiable Capture Devices.
+  
+### SelectDevices 
+Select the Devices.
+  
+### LoadSound 
+Load Audio-File as BlitzMax TSound Object.  
+
+### LoadAudioSample 
+Load MP3, FLAC, WAV or OGG as BlitzMax TAudioSample Object.  
+
+### LoadExtendedAudioSample 
+Load MP3, FLAC, WAV or OGG as new extended ExTAudioSample Object.  
+
+### SaveTAudioSample 
+Save BlitzMax TAudioSample as WAV.  
+
+### SaveExTAudioSample 
+Save new extended TAudioSample as WAV.  
+
+### SaveWavBank 
+Save a TBank as WAV File.  
+
+### OpenWavFile 
+Special Open WAV File for Writing.  
+
+### WriteWavFile 
+Special Write data to WAV File.
+  
+### CloseWavFile 
+Close special WAV File.
+  
+### ConvertAudioSample 
+Convert TAudioSample into a ExTAudioSample.
+  
+### ConvertAudioSample_II ConvertAudioSample_II
+Convert  TAudioSample into a TBank.   
+
+
+## Type ExTAudioSample:
+
+### Create 
+Create Extended TAudio Object.  
+
+### Samples 
+Sample-Pointer to audio data.  
+
+### ExtractChannel 
+Extract one Channel from a ExTAudioSample.  
+
+### ImportChannel 
+Imports one Channel into a ExTAudioSample.  
+Clear Clears the Sample Buffer.  
