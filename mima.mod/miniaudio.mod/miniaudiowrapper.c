@@ -1,3 +1,12 @@
+//*************************************************************************
+// version info 1.25
+// 2021-06-01: add modiefied midiaudio.h
+// this code is public domain
+// author: Peter Wolkersdorfer www.midimaster
+// thanks to col from https://github.com/davecamp
+//************************************************************************
+
+
 #define DEBUG_OUTPUT(...) printf(__VA_ARGS__); fflush(0)
 #include <brl.mod/blitz.mod/blitz.h>
 
@@ -7,10 +16,68 @@
 
 
 
+// COL workaround for BlitzMax thread register Needs minimum miniaudio.h version 0.10.36 or 0.11.01 and higher!!!
+typedef struct mimaThread mimaThread;
+struct mimaThread {
+	mimaThread* Next;
+	BBThread* Thread;
+};
 
+mimaThread* maThreads;
 
+#ifdef WIN32
+void mimaOnMAThreadEntry() {
+	DWORD id = GetCurrentThreadId();
+	DEBUG_OUTPUT("Registering thread id: %d\n", id);
+	mimaThread* maThread = (mimaThread*)malloc(sizeof(mimaThread));
+	maThread->Next = maThreads;
+	maThread->Thread = bbThreadRegister(id);
+	maThreads = maThread;
+}
+void mimaOnMAThreadExit() {
+	DWORD id = GetCurrentThreadId();
+	DEBUG_OUTPUT("Unregistering thread id: %d\n", id);
+	mimaThread** Threads = &maThreads;
+	mimaThread* ThisThread;
+	while(ThisThread = *Threads)
+		if(ThisThread->Thread->id == id) {
+			*Threads = ThisThread->Next;
+			bbThreadUnregister(ThisThread->Thread);
+			free(ThisThread);
+			break;
+		}
+		else
+			Threads = &ThisThread->Next;
+}
+#else
+void mimaOnMAThreadEntry() {
+	void* handle = pthread_self();
+	DEBUG_OUTPUT("Registering thread handle: 0x%08x\n", handle);
+	mimaThread* maThread = (mimaThread*)malloc(sizeof(mimaThread));
+	maThread->Next = maThreads;
+	maThread->Thread = bbThreadRegister(handle);
+	maThreads = maThread;
+}
+void mimaOnMAThreadExit() {
+	void* handle = pthread_self();
+	DEBUG_OUTPUT("Unregistering thread handle: 0x%08x\n", id);
+	mimaThread** Threads = &maThreads;
+	mimaThread* ThisThread;
+	while(ThisThread = *Threads)
+		if(ThisThread->Thread->handle == handle) {
+			*Threads = ThisThread->Next;
+			bbThreadUnregister(ThisThread->Thread);
+			free(ThisThread);
+			break;
+		}
+		else
+			Threads = &ThisThread->Next;
+}
+#endif
 
-
+#define MA_ON_THREAD_ENTRY mimaOnMAThreadEntry();
+#define MA_ON_THREAD_EXIT mimaOnMAThreadExit();
+// end COL
 
 
 #define MINIAUDIO_IMPLEMENTATION
@@ -22,23 +89,12 @@
 
 #include "miniaudiox.h"
 
-
-    // The stb_vorbis implementation must come after the implementation of miniaudio.
-    #undef STB_VORBIS_HEADER_ONLY
-    #include "stb_vorbis.c"
-
-
-
+// The stb_vorbis implementation must come after the implementation of miniaudio.
+#undef STB_VORBIS_HEADER_ONLY
+#include "stb_vorbis.c"
 
 #include <stdio.h>
 #include <string.h>
-//*************************************************************************
-// version info 1.24
-// 2021-06-01: add modiefied midiaudio.h
-// this code is public domain
-// author: Peter Wolkersdorfer www.midimaster
-// thanks to col from https://github.com/davecamp
-//************************************************************************
 
 
 
@@ -197,7 +253,7 @@ int MM_Decode16bit(char* FileName, short *TSampleRAM){
 
 
 
-//one pass decoding 32bit:
+//one pass decoding 32bit float:
 int MM_Decode(char* FileName, float *TSampleRAM){
 	printf("MM DECODER ONE PASS 32bit \n");
 	ma_decoder_config audioConfig = ma_decoder_config_init(ma_format_f32, 0, 0);
@@ -212,6 +268,25 @@ int MM_Decode(char* FileName, float *TSampleRAM){
 	DEBUG_OUTPUT("------ \n");
 	return 1;	
 }
+
+
+
+//one pass decoding 32bit int:
+int MM_Decode32(char* FileName, int *TSampleRAM){
+	printf("MM DECODER ONE PASS 32bit \n");
+	ma_decoder_config audioConfig = ma_decoder_config_init(ma_format_s32, 0, 0);
+	long long frameCount;
+	int* pAudioData;
+	int result = ma_decode_file(FileName, &audioConfig, &frameCount, &pAudioData);
+    
+	int i;
+	for (i=0; i<(frameCount*audioConfig.channels); i++){
+		TSampleRAM[i] =  pAudioData[i];
+	}
+	DEBUG_OUTPUT("------ \n");
+	return 1;	
+}
+
 
 
 
