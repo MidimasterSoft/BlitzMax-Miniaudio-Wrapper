@@ -21,7 +21,7 @@ Import mima.miniaudio
 
 ' Setup of the device:
 Global MiniAudio:TMiniAudio=New TMiniAudio
-MiniAudio.GetDevice( MiniAudio.PLAYBACK, Miniaudio.FORMAT_S16, 1, 48000, MyCallBack)
+MiniAudio.OpenDevice( MiniAudio.PLAYBACK, Miniaudio.FORMAT_S16, 1, 48000, MyCallBack)
 
 ' now start it:
 MiniAudio.StartDevice()
@@ -32,7 +32,7 @@ Repeat
 Until AppTerminate()
 
 ' free the device:
-Miniaudio.KillDevice()
+Miniaudio.CloseDevice()
 End 
 
 'data aree delivered via a callback procedure:
