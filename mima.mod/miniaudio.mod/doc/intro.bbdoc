@@ -1,0 +1,100 @@
+
+This interface will enable...
+<h1>Device Features:</h1><h3>
+[ * Audio-Playback and Recording with low latency below 30msec
+* Realtime Samples access of already playing samples
+*  Playback and Capture MONO STEREO, 3-32 tracks
+* Full Duplex: Capture and Playback at the same time
+* Loopback: Record what is "on the speakers"
+* All backend devices on all plattforms are supported incl. WASAPI on Windows
+* access to USB hardware devices with upto 32 capture/playback channels 
+* Formats: 8bit, 16bit, 32bit and 32bit-float
+* Samples-Rates from 8kHz-192kHzHz
+* CallBack-Access, Multithread
+]</h3>
+<h1>File Features:</h1><h3>
+[ * Opening MP3, OGG, FLAC and WAV files with Audioformats bejond 16bit
+* Opening OGG, FLAC and WAV files with Multichannels
+* Converting Audiofiles to old BlitzMax TAudioSample TSound objects
+* New extended TAudioSample object with multichannel and 32bit samples
+* Save WAV-files in various formats  upto 32 tracks
+]</h3>  
+<h1>Example: Open Playback and make some noise</h1>
+
+&{Import mima.miniaudio
+
+' Setup of the device:
+Global MiniAudio:TMiniAudio=New TMiniAudio
+MiniAudio.OpenDevice( MiniAudio.PLAYBACK, Miniaudio.FORMAT_S16, 1, 48000, MyCallBack)
+
+' now start it:
+MiniAudio.StartDevice()
+
+'your main loop
+Repeat
+	Flip 1
+Until AppTerminate()
+
+'free the device
+Miniaudio.CloseDevice()
+End 
+
+'here the datas are transfered:
+Function MyCallBack(void:Byte Ptr, PlayBuffer:Short Ptr, RecordingBuffer:Short Ptr, Frames:Int)
+	For Local i:Int=0 To Frames-1
+		PlayBuffer[i] = Rand(-32000,+32000)
+	Next 
+End Function 
+}
+
+
+
+
+<h1>Example: Capture Audio In</h1>
+
+&{Import mima.miniaudio
+
+' Setup of the device:
+Global MiniAudio:TMiniAudio=New TMiniAudio
+MiniAudio.OpenDevice( MiniAudio.CAPTURE, Miniaudio.FORMAT_S16, 1, 48000, MyCallBack)
+
+Global Source:TAudioSample=CreateAudioSample( HERTZ*10,  HERTZ, SF_MONO16LE) '10seconds
+Global SamplePointer:Short Ptr = Source.Samples()
+Global WritePointer:Int
+
+' now start it:
+MiniAudio.StartDevice()
+Repeat
+	Flip 1
+Until AppTerminate()
+Miniaudio.CloseDevice()
+End 
+
+
+Function MyCallBack(void:Byte Ptr, PlayBuffer:Short Ptr, RecordingBuffer:Short Ptr, Frames:Int)
+	For Local i:Int=0 To Frames-1
+		SamplePointer[WritePointer+i]= RecordingBuffer[i]
+	Next 
+	WritePointer=WritePointer + Frames
+End Function 
+
+}
+
+
+
+
+<h1>More Examples:</h1>
+See the example folder in the miniaudio.mod directory for deeper examples
+
+
+
+
+
+
+
+
+
+
+
+
+

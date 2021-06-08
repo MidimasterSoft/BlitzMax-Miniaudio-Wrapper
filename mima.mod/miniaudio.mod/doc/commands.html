@@ -3,107 +3,102 @@
 </head><body>
 <table width=100% cellspacing=0><tr align=center><td class=small>&nbsp;</td>
 <td class=small width=1%><b>mima.miniaudio:</b></td>
-<td class=small width=1%><a href=#functions class=small>Functions</a></td>
 <td class=small width=1%><a href=#types class=small>Types</a></td>
 <td class=small width=1%><a href=#modinfo class=small>Modinfo</a></td>
 <td class=small width=1%><a href='../../../../mod/mima.mod/miniaudio.mod/miniaudio.bmx' class=small>Source</a></td>
 <td class=small>&nbsp;</td></tr></table>
 <h1>MiniAudio Wrapper</h1>
-Beta Vesion of a wrapper for miniaudio for blitzmax.
-
-<h2
- id=functionsdet>Example
-</h2>
-<table class=doc width=100% cellspacing=3 id=ExampleForCallBack>
-<tr><td class=doctop colspan=2>3 Examples For Playback and Capture via CallBack()</td></tr>
-<tr><td class=docleft width=1%>Description</td><td class=docright>Example For A Callback.</td></tr>
-<tr><td class=docleft width=1%>Information</td><td class=docright>How to Playback and Capture Samples
-<br> <b>Frames</b>: number of Samples when Mono. Number of Samples when Stereo is 2*Frames!!
-<br> <b>PlayBuffer</b>: Here you put the samples for Playback
-<br> <b>RecordingBuffer</b>: Here you find the samples from capture input.</td></tr>
-<tr><td class=docleft width=1%><a href=ExampleForCallBack.bmx class=small>Example</a></td><td class=docright><pre>
-'Example I: only playback
-
-Import mima.miniaudio
-
+Binding/Wrapper for MiniAudio for BlitzMax.
+This interface will enable...
+<h1>Device Features:</h1><h3>
+<table><tr><td> </td></tr><tr><td>Audio-Playback and Recording with low latency below 30msec
+</td></tr><tr><td>Realtime Samples access of already playing samples
+</td></tr><tr><td> Playback and Capture MONO STEREO, 3-32 tracks
+</td></tr><tr><td>Full Duplex: Capture and Playback at the same time
+</td></tr><tr><td>Loopback: Record what is "on the speakers"
+</td></tr><tr><td>All backend devices on all plattforms are supported incl. WASAPI on Windows
+</td></tr><tr><td>access to USB hardware devices with upto 32 capture/playback channels 
+</td></tr><tr><td>Formats: 8bit, 16bit, 32bit and 32bit-float
+</td></tr><tr><td>Samples-Rates from 8kHz-192kHzHz
+</td></tr><tr><td>CallBack-Access, Multithread</table>
+</h3>
+<h1>File Features:</h1><h3>
+<table><tr><td> </td></tr><tr><td>Opening MP3, OGG, FLAC and WAV files with Audioformats bejond 16bit
+</td></tr><tr><td>Opening OGG, FLAC and WAV files with Multichannels
+</td></tr><tr><td>Converting Audiofiles to old BlitzMax TAudioSample TSound objects
+</td></tr><tr><td>New extended TAudioSample object with multichannel and 32bit samples
+</td></tr><tr><td>Save WAV-files in various formats  upto 32 tracks</table>
+</h3>  
+<h1>Example: Open Playback and make some noise</h1>
+<p>
+<pre>Import mima.miniaudio
+<p>
 ' Setup of the device:
 Global MiniAudio:TMiniAudio=New TMiniAudio
-MiniAudio.GetDevice( MiniAudio.PLAYBACK, Miniaudio.FORMAT_S16, 1, 48000, MyCallBack_I)
-
+MiniAudio.OpenDevice( MiniAudio.PLAYBACK, Miniaudio.FORMAT_S16, 1, 48000, MyCallBack)
+<p>
 ' now start it:
 MiniAudio.StartDevice()
+<p>
+'your main loop
 Repeat
 	Flip 1
 Until AppTerminate()
-Miniaudio.KillDevice()
+<p>
+'free the device
+Miniaudio.CloseDevice()
 End 
-
-Function MyCallBack_I(void:Byte Ptr, PlayBuffer:Short Ptr, RecordingBuffer:Short Ptr, Frames%)
+<p>
+'here the datas are transfered:
+Function MyCallBack(void:Byte Ptr, PlayBuffer:Short Ptr, RecordingBuffer:Short Ptr, Frames:Int)
 	For Local i:Int=0 To Frames-1
-		PlayBuffer[i*2] = Rand(-32000,+32000)
+		PlayBuffer[i] = Rand(-32000,+32000)
 	Next 
 End Function 
+</pre>
+<p>
 
-__________________________________________________________________________________
-</pre></td></tr><tr><td class=docleft width=1%><a href=ExampleForCallBack.bmx class=small>Example</a></td><td class=docright><pre>
-'Example II: only capture:
+<p>
 
-Import mima.miniaudio
-
+<h1>Example: Capture Audio In</h1>
+<p>
+<pre>Import mima.miniaudio
+<p>
 ' Setup of the device:
 Global MiniAudio:TMiniAudio=New TMiniAudio
-MiniAudio.GetDevice( MiniAudio.CAPTURE, Miniaudio.FORMAT_S16, 1, 48000, MyCallBack_II)
-
-Global Source:TAudioSample=CreateAudioSample( HERTZ*60*10,  HERTZ, SF_MONO16LE) '10seconds
-Global SoundBank:TBank=CreateStaticBank(Source.Samples, Source.Length)
+MiniAudio.OpenDevice( MiniAudio.CAPTURE, Miniaudio.FORMAT_S16, 1, 48000, MyCallBack)
+<p>
+Global Source:TAudioSample=CreateAudioSample( HERTZ*10,  HERTZ, SF_MONO16LE) '10seconds
+Global SamplePointer:Short Ptr = Source.Samples()
 Global WritePointer:Int
-
+<p>
 ' now start it:
 MiniAudio.StartDevice()
 Repeat
 	Flip 1
 Until AppTerminate()
-Miniaudio.KillDevice()
+Miniaudio.CloseDevice()
 End 
+<p>
 
-
-Function MyCallBack_II(void:Byte Ptr, PlayBuffer:Short Ptr, RecordingBuffer:Short Ptr, Frames%)
+Function MyCallBack(void:Byte Ptr, PlayBuffer:Short Ptr, RecordingBuffer:Short Ptr, Frames:Int)
 	For Local i:Int=0 To Frames-1
-		SoundBank.PokeShort(WritePointer+i*2 , RecordingBuffer[i*2])
+		SamplePointer[WritePointer+i]= RecordingBuffer[i]
 	Next 
-	WritePointer=WritePointer + Frames*2
+	WritePointer=WritePointer + Frames
 End Function 
-
-
-____________________________________________________________________________________
-</pre></td></tr><tr><td class=docleft width=1%><a href=ExampleForCallBack.bmx class=small>Example</a></td><td class=docright><pre>
-
-'Example III: Duplex:
-
-Import mima.miniaudio
-
-' Setup of the device:
-Global MiniAudio:TMiniAudio=New TMiniAudio
-MiniAudio.GetDevice( MiniAudio.DUPLEX, Miniaudio.FORMAT_S16, 1, 48000, MyCallBack_III)
-
-' now start it:
-MiniAudio.StartDevice()
-Repeat
-	Flip 1
-Until AppTerminate()
-Miniaudio.KillDevice()
-End 
-
-
-Function MyCallBack(void:Byte Ptr, PlayBuffer:Short Ptr, RecordingBuffer:Short Ptr, Frames%)
-	For Local i:Int=0 To Frames-1
-		PlayBuffer[i*2] = RecordingBuffer[i*2]
-	Next 
-End Function</pre></td></tr>
+<p>
+</pre>
+<h2><a name=types></a>Types Summary</h2><table class=doc width=100%>
+<tr><td class=docleft width=1%><a href=#TMiniAudio>TMiniAudio</a></td><td class=docright>
+MiniAudio-Wrapper.
+</td></tr>
+<tr><td class=docleft width=1%><a href=#ExTAudioSample>ExTAudioSample</a></td><td class=docright>
+Extended TAudioSample Object.
+</td></tr>
 </table>
-<br>
 <h2
- id=typesdet>Methods
+ id=typesdet>Types
 </h2>
 <table class=doc width=100% cellspacing=3 id=TMiniAudio>
 <tr><td class=doctop colspan=2>Type TMiniAudio</td></tr>
@@ -114,45 +109,12 @@ returns: A TMiniAudio object.</td></tr>
 
 Global MiniAudio:TMiniAudio=New TMiniAudio</pre></td></tr>
 </table>
-<table class=doc width=100% align=center><tr ><th class=doctop colspan=2 align=left><a name=TMiniAudio_methods></a>Methods Summary</th></tr>
-<tr><td class=docleft width=1%><a href=#CaptureDevices>CaptureDevices</a></td><td class=docright>
-Capture Devices.
+<table class=doc width=90% align=center><tr ><th class=doctop colspan=2 align=left><a name=TMiniAudio_methods></a>Methods Summary</th></tr>
+<tr><td class=docleft width=1%><a href=#OpenDevice>OpenDevice</a></td><td class=docright>
+Open Device.
 </td></tr>
-<tr><td class=docleft width=1%><a href=#CloseWavFile>CloseWavFile</a></td><td class=docright>
-Close WAV File.
-</td></tr>
-<tr><td class=docleft width=1%><a href=#ConvertAudioSample>ConvertAudioSample</a></td><td class=docright>
-ConvertAudioSample.
-</td></tr>
-<tr><td class=docleft width=1%><a href=#GetDevice>GetDevice</a></td><td class=docright>
-Get Device.
-</td></tr>
-<tr><td class=docleft width=1%><a href=#GetDevice_II>GetDevice_II</a></td><td class=docright>
-Same as <b>GetDevice</b>, but with independent parameters for Capture and Playback:
-</td></tr>
-<tr><td class=docleft width=1%><a href=#KillDevice>KillDevice</a></td><td class=docright>
-Kill Device.
-</td></tr>
-<tr><td class=docleft width=1%><a href=#LoadAudioSample>LoadAudioSample</a></td><td class=docright>
-Load MP3 as TAudioSample.
-</td></tr>
-<tr><td class=docleft width=1%><a href=#LoadSound>LoadSound</a></td><td class=docright>
-Load MP3 as TSound.
-</td></tr>
-<tr><td class=docleft width=1%><a href=#OpenWavFile>OpenWavFile</a></td><td class=docright>
-Open WAV File for Writing.
-</td></tr>
-<tr><td class=docleft width=1%><a href=#PlaybackDevices>PlaybackDevices</a></td><td class=docright>
-Playback Devices.
-</td></tr>
-<tr><td class=docleft width=1%><a href=#SaveTAudioSample>SaveTAudioSample</a></td><td class=docright>
-Save TAudioSample as WAV.
-</td></tr>
-<tr><td class=docleft width=1%><a href=#SaveWavFile>SaveWavFile</a></td><td class=docright>
-Save WAV File.
-</td></tr>
-<tr><td class=docleft width=1%><a href=#SelectDevices>SelectDevices</a></td><td class=docright>
-Select Devices.
+<tr><td class=docleft width=1%><a href=#OpenDevice_II>OpenDevice_II</a></td><td class=docright>
+Same as <b>OpenDevice</b>, but with independent parameters for Capture and Playback:
 </td></tr>
 <tr><td class=docleft width=1%><a href=#StartDevice>StartDevice</a></td><td class=docright>
 Start Device.
@@ -160,66 +122,57 @@ Start Device.
 <tr><td class=docleft width=1%><a href=#StopDevice>StopDevice</a></td><td class=docright>
 Stop Device.
 </td></tr>
+<tr><td class=docleft width=1%><a href=#CloseDevice>CloseDevice</a></td><td class=docright>
+close Device.
+</td></tr>
+<tr><td class=docleft width=1%><a href=#PlaybackDevices>PlaybackDevices</a></td><td class=docright>
+Playback Devices.
+</td></tr>
+<tr><td class=docleft width=1%><a href=#CaptureDevices>CaptureDevices</a></td><td class=docright>
+Capture Devices.
+</td></tr>
+<tr><td class=docleft width=1%><a href=#SelectDevices>SelectDevices</a></td><td class=docright>
+Select Devices.
+</td></tr>
+<tr><td class=docleft width=1%><a href=#LoadSound>LoadSound</a></td><td class=docright>
+Load Audio-File as BlitzMax TSound Object.
+</td></tr>
+<tr><td class=docleft width=1%><a href=#LoadAudioSample>LoadAudioSample</a></td><td class=docright>
+Load MP3, FLAC, WAV or OGG as BlitzMax TAudioSample Object.
+</td></tr>
+<tr><td class=docleft width=1%><a href=#LoadExtendedAudioSample>LoadExtendedAudioSample</a></td><td class=docright>
+Load MP3, FLAC, WAV or OGG as new  extended ExTAudioSample Object.
+</td></tr>
+<tr><td class=docleft width=1%><a href=#SaveTAudioSample>SaveTAudioSample</a></td><td class=docright>
+Save BlitzMax TAudioSample as WAV.
+</td></tr>
+<tr><td class=docleft width=1%><a href=#SaveExTAudioSample>SaveExTAudioSample</a></td><td class=docright>
+Save new extended  TAudioSample as WAV.
+</td></tr>
+<tr><td class=docleft width=1%><a href=#SaveWavBank>SaveWavBank</a></td><td class=docright>
+Save WAV Bank.
+</td></tr>
+<tr><td class=docleft width=1%><a href=#OpenWavFile>OpenWavFile</a></td><td class=docright>
+Special Open WAV File for Writing.
+</td></tr>
 <tr><td class=docleft width=1%><a href=#WriteWavFile>WriteWavFile</a></td><td class=docright>
 Write data to WAV File.
 </td></tr>
+<tr><td class=docleft width=1%><a href=#CloseWavFile>CloseWavFile</a></td><td class=docright>
+Close WAV File.
+</td></tr>
+<tr><td class=docleft width=1%><a href=#ConvertAudioSample>ConvertAudioSample</a></td><td class=docright>
+ConvertAudioSample.
+</td></tr>
+<tr><td class=docleft width=1%><a href=#ConvertAudioSample_II>ConvertAudioSample_II</a></td><td class=docright>
+ConvertAudioSample_II.
+</td></tr>
 </table>
-<table class=doc width=100% cellspacing=3 id=CaptureDevices>
-<tr><td class=doctop colspan=2>Method CaptureDevices:String[]()</td></tr>
-<tr><td class=docleft width=1%>Returns</td><td class=docright>a String array.</td></tr>
-<tr><td class=docleft width=1%>Description</td><td class=docright>Capture Devices.</td></tr>
-<tr><td class=docleft width=1%>Information</td><td class=docright>Lists all avaiable hardware Capture-Devices.</td></tr>
-</table>
-<table class=doc width=100% cellspacing=3 id=CloseWavFile>
-<tr><td class=doctop colspan=2>Method CloseWavFile(Handle:MMStreamID)</td></tr>
-<tr><td class=docleft width=1%>Description</td><td class=docright>Close WAV File.</td></tr>
-<tr><td class=docleft width=1%>Information</td><td class=docright>closes wav file after saving the content.
-<br><br>
-<br><br> <b>Handle</b> is the handle to the file returned by OpenWavFile()
-<br><br>
-Use together with OpenWavFile() and  WriteWavFile()</td></tr>
-</table>
-<table class=doc width=100% cellspacing=3 id=ConvertAudioSample>
-<tr><td class=doctop colspan=2>Method ConvertAudioSample:TBank(Source:TAudioSample, Format:Int, Channels:Int, Hertz:Int)</td></tr>
-<tr><td class=docleft width=1%>Returns</td><td class=docright>a TBank object.</td></tr>
-<tr><td class=docleft width=1%>Description</td><td class=docright>ConvertAudioSample.</td></tr>
-<tr><td class=docleft width=1%>Information</td><td class=docright>Converts a TAudioSample into a Bank with new format, samplerate and channels.
-<br><br> <b>Format</b> is the Target-format and should be one of:
-<p>
-<table><tr><td> <b>Format</b></td><td><b>Value</b></td><td><b>Description</b>
-</td></tr><tr><td>FORMAT_U8</td><td>1</td><td>Unsigned 8 bit
-</td></tr><tr><td>FORMAT_S16</td><td>2</td><td>Signed 16 bit little endian
-</td></tr><tr><td>FORMAT_S24</td><td>3</td><td>Signed 24 bit little endian
-</td></tr><tr><td>FORMAT_S32</td><td>4</td><td>Signed 32 bit little endian
-</td></tr><tr><td>FORMAT_F32</td><td>5</td><td>Signed 32 bit Float -1 to +1</table>
-<p>
-<br><br> <b>Channels</b> is the target number of Channels 1 = MONO    2 = STEREO.
-<br><br> <b>Hertz</b> is the target frequency in samples per second (Hz).</td></tr>
-<tr><td class=docleft width=1%><a href=ConvertAudioSample.bmx class=small>Example</a></td><td class=docright><pre>SuperStrict
-Import mima.miniaudio
-
-Graphics 800,600
-
-' Setup of the device:
-Global MiniAudio:TMiniAudio=New TMiniAudio
-
-Local Source:TAudioSample=LoadAudioSample("TestAbc.ogg")
-
-Global ResultBank:TBank
-ResultBank= MiniAudio.ConvertAudioSample(Source, Miniaudio.FORMAT_F32, 1, 12000)
-
-'show 500 samples in old and new format:
-For Local i%=1000 To 1500
-	Print  i + ".Sample  Source:" +  SoundBank.PeekShort(i*2) + "-->" + Resultbank.PeekFloat(i*4)
-Next 
-End</pre></td></tr>
-</table>
-<table class=doc width=100% cellspacing=3 id=GetDevice>
-<tr><td class=doctop colspan=2>Method GetDevice:Int(DeviceType:Int, Format:Int, Channels:Int, SampleRate:Int, UserCallBackPointer: Byte Ptr)</td></tr>
+<table class=doc width=100% cellspacing=3 id=OpenDevice>
+<tr><td class=doctop colspan=2>Method OpenDevice:Int(DeviceType:Int, Format:Int, Channels:Int, SampleRate:Int, UserCallBackPointer: Byte Ptr)</td></tr>
 <tr><td class=docleft width=1%>Returns</td><td class=docright>TRUE if successful.</td></tr>
-<tr><td class=docleft width=1%>Description</td><td class=docright>Get Device.</td></tr>
+<tr><td class=docleft width=1%>Description</td><td class=docright>Open Device.</td></tr>
 <tr><td class=docleft width=1%>Information</td><td class=docright>Define Device Configuration
-<p>
 <br> <b>DeviceType</b> is one of:
 <table><tr><td> <b>Device</b> Type</td><td><b>Value</b></td><td><b>Description</b>
 </td></tr><tr><td>PLAYBACK</td><td>1</td><td>Use the device for Playing
@@ -227,8 +180,8 @@ End</pre></td></tr>
 </td></tr><tr><td>DUPLEX</td><td>3</td><td>Use the device for simultanious Capture and Playing
 </td></tr><tr><td>LOOPBACK</td><td>4</td><td>Record what is "on the speakers"</table>
 <p>
-<br><br> <b>Channels</b> is the number of Channels 1 = MONO    2 = STEREO.
-<br><br> <b>SampleRate</b> is the frequency in samples per second (Hz) the audio sample will be played.
+<br> <b>Channels</b> is the number of Channels 1=MONO, 2=STEREO , 3-32=Multichannel.
+<br><br> <b>SampleRate</b> is the frequency in samples per second (Hz) the audio sample will be processed.
 <br><br> <b>UserCallBackPointer</b> is the name of your Callback-function
 <br><br> <b>Format</b> should be one of:
 <p>
@@ -240,10 +193,10 @@ End</pre></td></tr>
 </td></tr><tr><td>FORMAT_F32</td><td>5</td><td>Signed 32 bit Float -1 to +1</table>
 </td></tr>
 </table>
-<table class=doc width=100% cellspacing=3 id=GetDevice_II>
-<tr><td class=doctop colspan=2>Method GetDevice_II:Int(DeviceType:Int, PlayFormat:Int, PlayChannels:Int,  CaptFormat:Int, CaptChannels:Int,SampleRate:Int, UserCallBackPointer: Byte Ptr)</td></tr>
+<table class=doc width=100% cellspacing=3 id=OpenDevice_II>
+<tr><td class=doctop colspan=2>Method OpenDevice_II:Int(DeviceType:Int, PlayFormat:Int, PlayChannels:Int,  CaptFormat:Int, CaptChannels:Int,SampleRate:Int, UserCallBackPointer: Byte Ptr)</td></tr>
 <tr><td class=docleft width=1%>Returns</td><td class=docright>TRUE if successful.</td></tr>
-<tr><td class=docleft width=1%>Description</td><td class=docright>Same as <b>GetDevice</b>, but with independent parameters for Capture and Playback:</td></tr>
+<tr><td class=docleft width=1%>Description</td><td class=docright>Same as <b>OpenDevice</b>, but with independent parameters for Capture and Playback:</td></tr>
 <tr><td class=docleft width=1%>Information</td><td class=docright>Define two different Device Configurations for Duplex
 <p>
 <br> <b>DeviceType</b> is :
@@ -262,16 +215,100 @@ End</pre></td></tr>
 </td></tr><tr><td>FORMAT_F32</td><td>5</td><td>Signed 32 bit Float -1 to +1</table>
 </td></tr>
 </table>
-<table class=doc width=100% cellspacing=3 id=KillDevice>
-<tr><td class=doctop colspan=2>Method KillDevice()</td></tr>
-<tr><td class=docleft width=1%>Description</td><td class=docright>Kill Device.</td></tr>
+<table class=doc width=100% cellspacing=3 id=StartDevice>
+<tr><td class=doctop colspan=2>Method StartDevice()</td></tr>
+<tr><td class=docleft width=1%>Description</td><td class=docright>Start Device.</td></tr>
+<tr><td class=docleft width=1%>Information</td><td class=docright>Runs the Device or continues the Device.</td></tr>
+</table>
+<table class=doc width=100% cellspacing=3 id=StopDevice>
+<tr><td class=doctop colspan=2>Method StopDevice()</td></tr>
+<tr><td class=docleft width=1%>Description</td><td class=docright>Stop Device.</td></tr>
+<tr><td class=docleft width=1%>Information</td><td class=docright>Pauses the Device.</td></tr>
+</table>
+<table class=doc width=100% cellspacing=3 id=CloseDevice>
+<tr><td class=doctop colspan=2>Method CloseDevice()</td></tr>
+<tr><td class=docleft width=1%>Description</td><td class=docright>close Device.</td></tr>
 <tr><td class=docleft width=1%>Information</td><td class=docright>Deletes the Device.</td></tr>
+</table>
+<table class=doc width=100% cellspacing=3 id=PlaybackDevices>
+<tr><td class=doctop colspan=2>Method PlaybackDevices:String[]()</td></tr>
+<tr><td class=docleft width=1%>Returns</td><td class=docright>a String array.</td></tr>
+<tr><td class=docleft width=1%>Description</td><td class=docright>Playback Devices.</td></tr>
+<tr><td class=docleft width=1%>Information</td><td class=docright>Lists all avaiable hardware Playback-Devices.</td></tr>
+<tr><td class=docleft width=1%><a href=PlaybackDevices.bmx class=small>Example</a></td><td class=docright><pre>SuperStrict
+Import mima.miniaudio
+
+' Setup of the device:
+Global MiniAudio:TMiniAudio=New TMiniAudio
+
+Local i:Int
+Print   "Playback-Devices:"
+
+For Local DeviceName:String= EachIn MiniAudio.PlaybackDevices()
+	Print  "ID=" + i + ": " + DeviceName
+	i=i+1
+Next</pre></td></tr>
+</table>
+<table class=doc width=100% cellspacing=3 id=CaptureDevices>
+<tr><td class=doctop colspan=2>Method CaptureDevices:String[]()</td></tr>
+<tr><td class=docleft width=1%>Returns</td><td class=docright>a String array.</td></tr>
+<tr><td class=docleft width=1%>Description</td><td class=docright>Capture Devices.</td></tr>
+<tr><td class=docleft width=1%>Information</td><td class=docright>Lists all avaiable hardware Capture-Devices.</td></tr>
+<tr><td class=docleft width=1%><a href=CaptureDevices.bmx class=small>Example</a></td><td class=docright><pre>SuperStrict
+Import mima.miniaudio
+
+' Setup of the device:
+Global MiniAudio:TMiniAudio=New TMiniAudio
+
+Local i:Int
+Print   "Capture-Devices:"
+
+For Local DeviceName:String= EachIn MiniAudio.CaptureDevices()
+	Print  "ID=" + i + ": " + DeviceName
+	i=i+1
+Next</pre></td></tr>
+</table>
+<table class=doc width=100% cellspacing=3 id=SelectDevices>
+<tr><td class=doctop colspan=2>Method SelectDevices(ID_Playback:Int=-1, ID_Capture:Int=-1)</td></tr>
+<tr><td class=docleft width=1%>Description</td><td class=docright>Select Devices.</td></tr>
+<tr><td class=docleft width=1%>Information</td><td class=docright>Select one from the avaiable hardware Devices. For ID_.. use their position in the string arrays  PlaybackDevices[] and CaptureDevices[].
+The selection must be done before calling *MiniAudio.OpenDevice(). Sending -1 as ID uses the OS default device.</td></tr>
+<tr><td class=docleft width=1%><a href=SelectDevices.bmx class=small>Example</a></td><td class=docright><pre>SuperStrict
+Import mima.miniaudio
+
+' Setup of the device:
+Global MiniAudio:TMiniAudio=New TMiniAudio
+
+Local i:Int
+Print   "Capturek-Devices:"
+
+For Local DeviceName:String= EachIn MiniAudio.CaptureDevices()
+	Print  "ID=" + i + ": " + DeviceName
+	i=i+1
+Next 
+
+' keep default playback device, but use capture device ID=1:
+Miniaudio.SelectDevices(-1,1)
+MiniAudio.OpenDevice( MiniAudio.CAPTURE, Miniaudio.FORMAT_S16, 1, 48000, MyCallBack)</pre></td></tr>
+</table>
+<table class=doc width=100% cellspacing=3 id=LoadSound>
+<tr><td class=doctop colspan=2>Method LoadSound:TSound(File:String)</td></tr>
+<tr><td class=docleft width=1%>Returns</td><td class=docright>a TSound object.</td></tr>
+<tr><td class=docleft width=1%>Description</td><td class=docright>Load Audio-File as BlitzMax TSound Object.</td></tr>
+<tr><td class=docleft width=1%>Information</td><td class=docright>Loads a MONO/STEREO audio MP3, FLAC, WAV or OGG file. No need for Defining or Starting the device.
+Also 24bit-, 32bit- and 32bit-float files are processed and converted to BlitzMax 16bit.</td></tr>
+<tr><td class=docleft width=1%><a href=LoadSound.bmx class=small>Example</a></td><td class=docright><pre>' example: loadsound.bmx
+
+Global MiniAudio:TMiniAudio = New TMiniAudio
+
+Local MySound:TSound = MiniAudio.LoadSound("TestABC.mp3")
+PlaySound MySound</pre></td></tr>
 </table>
 <table class=doc width=100% cellspacing=3 id=LoadAudioSample>
 <tr><td class=doctop colspan=2>Method LoadAudioSample:TAudioSample(File:String)</td></tr>
 <tr><td class=docleft width=1%>Returns</td><td class=docright>a TAudioSample object.</td></tr>
-<tr><td class=docleft width=1%>Description</td><td class=docright>Load MP3 as TAudioSample.</td></tr>
-<tr><td class=docleft width=1%>Information</td><td class=docright>Loads an audio MP3, FLAC or WAV file.  24bit-, 32bit- and 32bit-float-files will return 16bit TAudioSample. No need for Defining or Starting the device.</td></tr>
+<tr><td class=docleft width=1%>Description</td><td class=docright>Load MP3, FLAC, WAV or OGG as BlitzMax TAudioSample Object.</td></tr>
+<tr><td class=docleft width=1%>Information</td><td class=docright>Loads a MONO/STEREO audio MP3, FLAC, WAV or OGG file.  24bit-, 32bit- and 32bit-float-files will return 16bit TAudioSample. No need for Defining or Starting the device.</td></tr>
 <tr><td class=docleft width=1%><a href=LoadAudioSample.bmx class=small>Example</a></td><td class=docright><pre>' example: loadAudioSample.bmx
 
 Global MiniAudio:TMiniAudio=New TMiniAudio
@@ -281,23 +318,144 @@ Local MySample:TAudioSample = MiniAudio.LoadAudioSample("TestABC.flac")
 Local MySound:TSound=LoadSound(MySample)
 PlaySound MySound</pre></td></tr>
 </table>
-<table class=doc width=100% cellspacing=3 id=LoadSound>
-<tr><td class=doctop colspan=2>Method LoadSound:TSound(File:String)</td></tr>
-<tr><td class=docleft width=1%>Returns</td><td class=docright>a TSound object.</td></tr>
-<tr><td class=docleft width=1%>Description</td><td class=docright>Load MP3 as TSound.</td></tr>
-<tr><td class=docleft width=1%>Information</td><td class=docright>Loads an audio MP3, FlAC or WAV file. No need for Defining or Starting the device.
-Also 24bit-, 32bit- and 32bit-float files are processed.</td></tr>
-<tr><td class=docleft width=1%><a href=LoadSound.bmx class=small>Example</a></td><td class=docright><pre>' example: loadsound.bmx
+<table class=doc width=100% cellspacing=3 id=LoadExtendedAudioSample>
+<tr><td class=doctop colspan=2>Method LoadExtendedAudioSample:ExTAudioSample(File:String, Format:Int=FORMAT_F32)</td></tr>
+<tr><td class=docleft width=1%>Returns</td><td class=docright>a ExTAudioSample object.</td></tr>
+<tr><td class=docleft width=1%>Description</td><td class=docright>Load MP3, FLAC, WAV or OGG as new  extended ExTAudioSample Object.</td></tr>
+<tr><td class=docleft width=1%>Information</td><td class=docright>Loads any audio OGG, MP3, FLAC or WAV file in the new extended TAudioSample object. Also Multichannel is supported. No need for Defining or Starting the device
+<br><br> <b>Format</b> should be one of:
+<p>
+<table><tr><td> <b>Format</b></td><td><b>Value</b></td><td><b>Description</b>
+</td></tr><tr><td>FORMAT_U8</td><td>1</td><td>Unsigned 8 bit
+</td></tr><tr><td>FORMAT_S16</td><td>2</td><td>Signed 16 bit little endian
+</td></tr><tr><td>FORMAT_S32</td><td>4</td><td>Signed 32 bit little endian
+</td></tr><tr><td>FORMAT_F32</td><td>5</td><td>Signed 32 bit Float -1 to +1</table>
+<p>
 
-Global MiniAudio:TMiniAudio = New TMiniAudio
+The Audio datas will be converted to the new format
+<p>
+See TYPE <a href=#ExTAudioSample>ExTAudioSample</a> for more informations.</td></tr>
+<tr><td class=docleft width=1%><a href=LoadExtendedAudioSample.bmx class=small>Example</a></td><td class=docright><pre>SuperStrict
+Import mima.miniaudio
+Graphics 400,300
+Global MiniAudio:TMiniAudio=New TMiniAudio
 
-Local MySound:TSound = MiniAudio.LoadSound("TestABC.mp3")
-PlaySound MySound</pre></td></tr>
+Global MySample:ExTAudioSample = MiniAudio.LoadExtendedAudioSample("TestABC.ogg", MiniAudio.FORMAT_F32)
+
+'IMPORTANT: Pointer to Samples must have the correct format. Here: Float Ptr 
+Global SampleRAM:Float Ptr= MySample.Samples()
+
+
+Print MySample.format
+Print MySample.Hertz
+Print MySample.channels
+
+
+MiniAudio.OpenDevice( MiniAudio.PLAYBACK, MySample.Format, MySample.Channels, MySample.Hertz, MyCallBack)
+Global ReadPointer:Int
+
+' now start it:
+MiniAudio.StartDevice()
+Repeat
+
+	Flip 0
+Until AppTerminate()
+Miniaudio.CloseDevice()
+End 
+
+
+Function MyCallBack(a%, PlayBuffer:Float Ptr, RecordingBuffer:Short Ptr, Frames:Int)
+	' here you manipulate the sound:
+	Local Channels:Int = MySample.Channels
+	For Local i:Int=0 To frames-1
+		For Local j:Int=0 To channels-1
+			PlayBuffer[i*Channels+j] = SampleRAM[((i+ReadPointer)*Channels+j)]
+		Next
+	Next
+	ReadPointer = ReadPointer + Frames 
+End Function</pre></td></tr>
+</table>
+<table class=doc width=100% cellspacing=3 id=SaveTAudioSample>
+<tr><td class=doctop colspan=2>Method SaveTAudioSample(FileName:String, Sample:TAudioSample)</td></tr>
+<tr><td class=docleft width=1%>Description</td><td class=docright>Save BlitzMax TAudioSample as WAV.</td></tr>
+<tr><td class=docleft width=1%>Information</td><td class=docright>Saves a TAudioSample as a WAV file.
+<br><br> <b>FileName</b> is the path + name of the audio file
+<br><br> <b>Sample</b> is the  TAudioSample object containing datas
+<br><br> No need for Defining or Starting the device
+<br><br>
+Use <a href=#OpenWavFile>OpenWavFile</a>() if you need to convert format or data is longer than 2GB.</td></tr>
+<tr><td class=docleft width=1%><a href=SaveTAudioSample.bmx class=small>Example</a></td><td class=docright><pre>' save_taudiosample.bmx
+SuperStrict
+Import mima.miniaudio
+' Setup of the device:
+Global MiniAudio:TMiniAudio=New TMiniAudio
+
+Global Sample:TAudioSample=LoadAudioSample("TestABC.ogg")
+
+MiniAudio.SaveTAudioSample("TestABC.wav", Sample)
+
+End</pre></td></tr>
+</table>
+<table class=doc width=100% cellspacing=3 id=SaveExTAudioSample>
+<tr><td class=doctop colspan=2>Method SaveExTAudioSample(FileName:String, Sample:ExTAudioSample)</td></tr>
+<tr><td class=docleft width=1%>Description</td><td class=docright>Save new extended  TAudioSample as WAV.</td></tr>
+<tr><td class=docleft width=1%>Information</td><td class=docright>Saves a ExTAudioSample as a WAV file.
+<br><br> <b>FileName</b> is the path + name of the audio file
+<br><br> <b>Sample</b> is the  ExTAudioSample object containing datas
+<br><br> No need for Defining or Starting the device
+<br><br>
+Use <a href=#OpenWavFile>OpenWavFile</a>() if you need to convert format or data is longer than 2GB.</td></tr>
+</table>
+<table class=doc width=100% cellspacing=3 id=SaveWavBank>
+<tr><td class=doctop colspan=2>Method SaveWavBank(FileName:String, Bank:TBank, Format:Int, Channels:Int, Hertz:Int, Frames:Int)</td></tr>
+<tr><td class=docleft width=1%>Description</td><td class=docright>Save WAV Bank.</td></tr>
+<tr><td class=docleft width=1%>Information</td><td class=docright>Saves the content of a  TBank as a WAV file. The content of the TBank must have the same format as the WAV file. No need for Defining or Starting the device
+<br><br> <b>FileName</b> is the path +name of the audio file
+<br><br> <b>Bank</b> is a TBank which contains the samples
+<br><br> <b>Channels</b> is the number of Channels 1 - 32.
+<br><br> <b>Hertz</b> is the frequency in samples per second (Hz) the Samples are captured.
+<br><br> <b>Format</b> should be one of:
+<table><tr><td> <b>Format</b></td><td><b>Value</b></td><td><b>Description</b>
+</td></tr><tr><td>FORMAT_U8</td><td>1</td><td>Unsigned 8 bit
+</td></tr><tr><td>FORMAT_S16</td><td>2</td><td>Signed 16 bit little endian
+</td></tr><tr><td>FORMAT_S24</td><td>3</td><td>Signed 24 bit little endian
+</td></tr><tr><td>FORMAT_S32</td><td>4</td><td>Signed 32 bit little endian
+</td></tr><tr><td>FORMAT_F32</td><td>5</td><td>Signed 32 bit Float -1 to +1</table>
+<p>
+<b>Frames</b> is is independent of Format and Channels and needs to be calculated by multiplication (Hertz*Seconds)
+or can also be calculated by TotalBytes/Channels/Format. So 32bit format and 5 channels are 4*5=20Bytes, but still only one frame!!!
+Use <b></b>#OpenWavFile() if you need to convert format or data is longer than 2GB.</td></tr>
+<tr><td class=docleft width=1%><a href=SaveWavBank.bmx class=small>Example</a></td><td class=docright><pre>' save_wav_file.bmx
+SuperStrict
+Import mima.miniaudio
+' Setup of the device:
+Global MiniAudio:TMiniAudio=New TMiniAudio
+
+Global Bank:TBank=CreateBank(44100*4*3*2)    ' 44.1kHz * 32bit * 3tracks * 2seconds
+Global FrameLength% = 4*3  ' 32bit*3tracks
+
+For Local I%=0 To (44100*2-FrameLength)
+	Local pos:Int=i*FrameLength
+	
+	'track 1 (sinus):
+	Local v#=Sin(i)/2
+	Bank.PokeFloat(Pos+0, v)
+	
+	' track 2 (silence): 
+	Bank.PokeFloat(Pos+4, 0)
+	
+	'track 3 (noise): 
+	v=Rnd()-0.5
+	Bank.PokeFloat(Pos+8, v) 
+Next 
+
+MiniAudio.SaveWavFile("capture.wav" , Bank , Miniaudio.FORMAT_F32 , 3 , 44100 , 44100*2)
+End</pre></td></tr>
 </table>
 <table class=doc width=100% cellspacing=3 id=OpenWavFile>
 <tr><td class=doctop colspan=2>Method OpenWavFile:MMStreamID(FileName:String, Format:Int, Channels:Int, Hertz:Int)</td></tr>
 <tr><td class=docleft width=1%>Returns</td><td class=docright>The handle to the file as MMStreamID.</td></tr>
-<tr><td class=docleft width=1%>Description</td><td class=docright>Open WAV File for Writing.</td></tr>
+<tr><td class=docleft width=1%>Description</td><td class=docright>Special Open WAV File for Writing.</td></tr>
 <tr><td class=docleft width=1%>Information</td><td class=docright>Opens a file for saving the content of a  TBank as a WAV file. Use it to save data in intervalls, when want to change
 format or when data will be  longer than 2GB
 <br><br> No need for Defining or Starting the device
@@ -312,8 +470,8 @@ format or when data will be  longer than 2GB
 </td></tr><tr><td>FORMAT_S32</td><td>4</td><td>Signed 32 bit little endian
 </td></tr><tr><td>FORMAT_F32</td><td>5</td><td>Signed 32 bit Float -1 to +1</table>
 <p>
-Use together with WriteWavFile() and CloseWavFile()</td></tr>
-<tr><td class=docleft width=1%><a href=OpenWavFile.bmx class=small>Example</a></td><td class=docright><pre>' open_wav_file.bmx
+Use together with <a href=#WriteWavFile>WriteWavFile</a>() and <b>CloseWavFile</b>()</td></tr>
+<tr><td class=docleft width=1%><a href=OpenWavFile.bmx class=small>Example</a></td><td class=docright><pre>' save_wav_file.bmx
 SuperStrict
 Import mima.miniaudio
 ' Setup of the device:
@@ -346,108 +504,14 @@ Function PartRecord()
 	Next 
 	MiniAudio.WriteWavFile(Stream, Bank, 5000)
 End Function</pre></td></tr>
-
-
-
-
-</table>
-<table class=doc width=100% cellspacing=3 id=PlaybackDevices>
-<tr><td class=doctop colspan=2>Method PlaybackDevices:String[]()</td></tr>
-<tr><td class=docleft width=1%>Returns</td><td class=docright>a String array.</td></tr>
-<tr><td class=docleft width=1%>Description</td><td class=docright>Playback Devices.</td></tr>
-<tr><td class=docleft width=1%>Information</td><td class=docright>Lists all avaiable hardware Playback-Devices.</td></tr>
-</table>
-<table class=doc width=100% cellspacing=3 id=SaveTAudioSample>
-<tr><td class=doctop colspan=2>Method SaveTAudioSample(FileName:String, Sample:TAudioSample)</td></tr>
-<tr><td class=docleft width=1%>Description</td><td class=docright>Save TAudioSample as WAV.</td></tr>
-<tr><td class=docleft width=1%>Information</td><td class=docright>Saves a TAudioSample as a WAV file.
-<br><br> <b>FileName</b> is the path +name of the audio file
-<br><br> <b>Sample</b> is the  TAudioSample
-<br><br> <b>Format</b> of Sample should be one of the BlitzMax audio-formats: SF_MONO8, SF_MONO16LE, SF_STEREO8, SF_STEREO16LE
-<br><br> No need for Defining or Starting the device
-<br><br>
-Use <b>OpenWavFile</b>() if you need to convert format or data is longer than 2GB.</td></tr>
-<tr><td class=docleft width=1%><a href=SaveTAudioSample.bmx class=small>Example</a></td><td class=docright><pre>' save_taudiosample.bmx
-SuperStrict
-Import mima.miniaudio
-' Setup of the device:
-Global MiniAudio:TMiniAudio=New TMiniAudio
-
-Global Sample:TAudioSample=LoadAudioSample("TestABC.ogg")
-
-MiniAudio.SaveTAudioSample("TestABC.wav", Sample)
-
-End</pre></td></tr>
-</table>
-<table class=doc width=100% cellspacing=3 id=SaveWavFile>
-<tr><td class=doctop colspan=2>Method SaveWavFile(FileName:String, Bank:TBank, Format:Int, Channels:Int, Hertz:Int, Frames:Int)</td></tr>
-<tr><td class=docleft width=1%>Description</td><td class=docright>Save WAV File.</td></tr>
-<tr><td class=docleft width=1%>Information</td><td class=docright>Saves the content of a  TBank as a WAV file. The content of the TBank must have the same format as the WAV file. No need for Defining or Starting the device
-<br><br> <b>FileName</b> is the path +name of the audio file
-<br><br> <b>Bank</b> is a TBank which contains the samples
-<br><br> <b>Channels</b> is the number of Channels 1 - 32.
-<br><br> <b>Hertz</b> is the frequency in samples per second (Hz) the Samples are captured.
-<br><br> <b>Format</b> should be one of:
-<table><tr><td> <b>Format</b></td><td><b>Value</b></td><td><b>Description</b>
-</td></tr><tr><td>FORMAT_U8</td><td>1</td><td>Unsigned 8 bit
-</td></tr><tr><td>FORMAT_S16</td><td>2</td><td>Signed 16 bit little endian
-</td></tr><tr><td>FORMAT_S24</td><td>3</td><td>Signed 24 bit little endian
-</td></tr><tr><td>FORMAT_S32</td><td>4</td><td>Signed 32 bit little endian
-</td></tr><tr><td>FORMAT_F32</td><td>5</td><td>Signed 32 bit Float -1 to +1</table>
-<p>
-<b>Frames</b> is is independent of Format and Channels and needs to be calculated by multiplication (Hertz*Seconds)
-or can also be calculated by TotalBytes/Channels/Format. So 32bit format and 5 channels are 4*5=20Bytes, but still only one frame!!!
-Use <b>OpenWavFile</b>() if you need to convert format or data is longer than 2GB.</td></tr>
-<tr><td class=docleft width=1%><a href=SaveWavFile.bmx class=small>Example</a></td><td class=docright><pre>' save_wav_file.bmx
-SuperStrict
-Import mima.miniaudio
-' Setup of the device:
-Global MiniAudio:TMiniAudio=New TMiniAudio
-
-Global Bank:TBank=CreateBank(44100*4*3*2)    ' 44.1kHz * 32bit * 3tracks * 2seconds
-Global FrameLength% = 4*3  ' 32bit*3tracks
-
-For Local I%=0 To (44100*2-FrameLength)
-	Local pos:Int=i*FrameLength
-	
-	'track 1 (sinus):
-	Local v#=Sin(i)/2
-	Bank.PokeFloat(Pos+0, v)
-	
-	' track 2 (silence): 
-	Bank.PokeFloat(Pos+4, 0)
-	
-	'track 3 (noise): 
-	v=Rnd()-0.5
-	Bank.PokeFloat(Pos+8, v) 
-Next 
-
-MiniAudio.SaveWavFile("capture.wav" , Bank , Miniaudio.FORMAT_F32 , 3 , 44100 , 44100*2)
-End</pre></td></tr>
-</table>
-<table class=doc width=100% cellspacing=3 id=SelectDevices>
-<tr><td class=doctop colspan=2>Method SelectDevices(ID_Playback:Int=0, ID_Capture:Int=0)</td></tr>
-<tr><td class=docleft width=1%>Description</td><td class=docright>Select Devices.</td></tr>
-<tr><td class=docleft width=1%>Information</td><td class=docright>Select one from the avaiable hardware Devices. For ID_.. use their position in the string arrays  PlaybackDevices[] and CaptureDevices[].
-The selection must be done before calling MiniAudio.GetDevice().</td></tr>
-</table>
-<table class=doc width=100% cellspacing=3 id=StartDevice>
-<tr><td class=doctop colspan=2>Method StartDevice()</td></tr>
-<tr><td class=docleft width=1%>Description</td><td class=docright>Start Device.</td></tr>
-<tr><td class=docleft width=1%>Information</td><td class=docright>Runs the Device or Continue Device.</td></tr>
-</table>
-<table class=doc width=100% cellspacing=3 id=StopDevice>
-<tr><td class=doctop colspan=2>Method StopDevice()</td></tr>
-<tr><td class=docleft width=1%>Description</td><td class=docright>Stop Device.</td></tr>
-<tr><td class=docleft width=1%>Information</td><td class=docright>Pauses the Device.</td></tr>
 </table>
 <table class=doc width=100% cellspacing=3 id=WriteWavFile>
-<tr><td class=doctop colspan=2>Method WriteWavFile(Handle:MMStreamID, Bank:TBank, Frames:Int, Format:Int=0, Channels:Int=0, Hertz:Int=0)</td></tr>
+<tr><td class=doctop colspan=2>Method WriteWavFile(Handle:MMStreamID, Adress:Byte Ptr, Frames:Int, Format:Int=0, Channels:Int=0, Hertz:Int=0)</td></tr>
 <tr><td class=docleft width=1%>Description</td><td class=docright>Write data to WAV File.</td></tr>
-<tr><td class=docleft width=1%>Information</td><td class=docright>writes to an opened wav file for saving the content of a  TBank. Use it to save data in intervalls, when want to change
+<tr><td class=docleft width=1%>Information</td><td class=docright>writes to an opened WAV file for saving the content of a TBank. Use it to save data in intervalls, when want to change
 format or when data will be  longer than 2GB
 <br><br> <b>Handle</b> is the handle to the file returned by OpenWavFile()
-<br><br> <b>Bank</b> is a TBank which contains the samples
+<br><br> <b>Adress</b> is a Byte Ptr to a RAM which contains the samples
 <br><br> <b>Frames</b> is is independent of Format and Channels and needs to be calculated by multiplication (Hertz*Seconds)
 or can also be calculated by TotalBytes/Channels/Format. So 32bit format and 5 channels are 4*5=20Bytes, but still only one frame!!!
 <br><br>
@@ -464,25 +528,199 @@ or can also be calculated by TotalBytes/Channels/Format. So 32bit format and 5 c
 </td></tr><tr><td>FORMAT_S32</td><td>4</td><td>Signed 32 bit little endian
 </td></tr><tr><td>FORMAT_F32</td><td>5</td><td>Signed 32 bit Float -1 to +1</table>
 <p>
-Use together with <b>OpenWavFile</b>() and <b>CloseWavFile</b>()</td></tr>
+Use together with <a href=#OpenWavFile>OpenWavFile</a>() and <a href=#CloseWavFile>CloseWavFile</a>()</td></tr>
+</table>
+<table class=doc width=100% cellspacing=3 id=CloseWavFile>
+<tr><td class=doctop colspan=2>Method CloseWavFile(Handle:MMStreamID)</td></tr>
+<tr><td class=docleft width=1%>Description</td><td class=docright>Close WAV File.</td></tr>
+<tr><td class=docleft width=1%>Information</td><td class=docright>Closes a WAV file (opened with OpenWavFile) after saving the content.
+<br><br>
+<br><br> <b>Handle</b> is the handle to the file returned by OpenWavFile()
+<br><br>
+Use together with <a href=#OpenWavFile>OpenWavFile</a>() and  <a href=#WriteWavFile>WriteWavFile</a>()</td></tr>
+</table>
+<table class=doc width=100% cellspacing=3 id=ConvertAudioSample>
+<tr><td class=doctop colspan=2>Method ConvertAudioSample:ExTAudioSample(Source:TAudioSample, Format:Int, Channels:Int, Hertz:Int)</td></tr>
+<tr><td class=docleft width=1%>Returns</td><td class=docright>a ExTAudioSample object.</td></tr>
+<tr><td class=docleft width=1%>Description</td><td class=docright>ConvertAudioSample.</td></tr>
+<tr><td class=docleft width=1%>Information</td><td class=docright>Converts a BlitzMax TAudioSample into the new extended TAudioSample with new format, samplerate and channels.
+<br><br> <b>Format</b> is the Target-format and should be one of:
+<p>
+<table><tr><td> <b>Format</b></td><td><b>Value</b></td><td><b>Description</b>
+</td></tr><tr><td>FORMAT_U8</td><td>1</td><td>Unsigned 8 bit
+</td></tr><tr><td>FORMAT_S16</td><td>2</td><td>Signed 16 bit little endian
+</td></tr><tr><td>FORMAT_S32</td><td>4</td><td>Signed 32 bit little endian
+</td></tr><tr><td>FORMAT_F32</td><td>5</td><td>Signed 32 bit Float -1 to +1</table>
+<p>
+<br><br> <b>Channels</b> is the target number of Channels 1 = MONO    2 = STEREO.
+<br><br> <b>Hertz</b> is the target frequency in samples per second (Hz).</td></tr>
+<tr><td class=docleft width=1%><a href=ConvertAudioSample.bmx class=small>Example</a></td><td class=docright><pre>SuperStrict
+Import mima.miniaudio
+
+' Setup of the device:
+Global MiniAudio:TMiniAudio=New TMiniAudio
+
+Local Source:TAudioSample=LoadAudioSample("TestABC.ogg")
+
+Global Target:ExTAudioSample
+Target= MiniAudio.ConvertAudioSample(Source, Miniaudio.FORMAT_F32, 1, 12000)
+
+'show 500 samples in old and new format:
+
+Local SourcePointer: Short Ptr = Source.Samples
+Local TargetPointer: Float Ptr = Target.Samples
+For Local i%=1000 To 1500
+	Print  i + ".Sample  Source:" +  SourcePointer[i] + "-->" + TargetPointer[i]
+Next 
+End</pre></td></tr>
+</table>
+<table class=doc width=100% cellspacing=3 id=ConvertAudioSample_II>
+<tr><td class=doctop colspan=2>Method ConvertAudioSample_II:TBank(Source:TAudioSample, Format:Int, Channels:Int, Hertz:Int)</td></tr>
+<tr><td class=docleft width=1%>Returns</td><td class=docright>a TBank object.</td></tr>
+<tr><td class=docleft width=1%>Description</td><td class=docright>ConvertAudioSample_II.</td></tr>
+<tr><td class=docleft width=1%>Information</td><td class=docright>Converts a TAudioSample into a Bank with new format, samplerate and channels.
+<br><br> <b>Format</b> is the Target-format and should be one of:
+<p>
+<table><tr><td> <b>Format</b></td><td><b>Value</b></td><td><b>Description</b>
+</td></tr><tr><td>FORMAT_U8</td><td>1</td><td>Unsigned 8 bit
+</td></tr><tr><td>FORMAT_S16</td><td>2</td><td>Signed 16 bit little endian
+</td></tr><tr><td>FORMAT_S24</td><td>3</td><td>Signed 24 bit little endian
+</td></tr><tr><td>FORMAT_S32</td><td>4</td><td>Signed 32 bit little endian
+</td></tr><tr><td>FORMAT_F32</td><td>5</td><td>Signed 32 bit Float -1 to +1</table>
+<p>
+<br><br> <b>Channels</b> is the target number of Channels 1 = MONO    2 = STEREO.
+<br><br> <b>Hertz</b> is the target frequency in samples per second (Hz).</td></tr>
+<tr><td class=docleft width=1%><a href=ConvertAudioSample_II.bmx class=small>Example</a></td><td class=docright><pre>SuperStrict
+Import mima.miniaudio
+
+' Setup of the device:
+Global MiniAudio:TMiniAudio=New TMiniAudio
+
+Local Source:TAudioSample=LoadAudioSample("TestAbc.ogg")
+
+Global ResultBank:TBank
+ResultBank= MiniAudio.ConvertAudioSample_II(Source, Miniaudio.FORMAT_F32, 1, 12000)
+
+'show 500 samples in old and new format:
+Local SourcePointer: Short Ptr = Source.Samples
+For Local i%=1000 To 1500
+	Print  i + ".Sample  Source:" +  SourcePointer[i] + "-->" + Resultbank.PeekFloat(i*4)
+Next 
+End</pre></td></tr>
+</table>
+<br>
+<table class=doc width=100% cellspacing=3 id=ExTAudioSample>
+<tr><td class=doctop colspan=2>Type ExTAudioSample 'Extends TAudioSample</td></tr>
+<tr><td class=docleft width=1%>Description</td><td class=docright>Extended TAudioSample Object.</td></tr>
+<tr><td class=docleft width=1%>Information</td><td class=docright>Enables multichannel and 32bit FLOAT.</td></tr>
+</table>
+<table class=doc width=90% align=center><tr ><th class=doctop colspan=2 align=left><a name=ExTAudioSample_functions></a>Functions Summary</th></tr>
+<tr><td class=docleft width=1%><a href=#Create>Create</a></td><td class=docright>
+Create Extended TAudio Object.
+</td></tr>
+</table>
+<table class=doc width=90% align=center><tr ><th class=doctop colspan=2 align=left><a name=ExTAudioSample_methods></a>Methods Summary</th></tr>
+<tr><td class=docleft width=1%><a href=#Samples>Samples</a></td><td class=docright>
+Sample-Pointer to audio data.
+</td></tr>
+<tr><td class=docleft width=1%><a href=#ExtractChannel>ExtractChannel</a></td><td class=docright>
+Extract one Channel.
+</td></tr>
+<tr><td class=docleft width=1%><a href=#ImportChannel>ImportChannel</a></td><td class=docright>
+Import one Channel.
+</td></tr>
+<tr><td class=docleft width=1%><a href=#Clear>Clear</a></td><td class=docright>
+Clears the Sample Buffer.
+</td></tr>
+</table>
+<table class=doc width=100% cellspacing=3 id=Create>
+<tr><td class=doctop colspan=2>Function Create:ExTAudioSample(frames:Int, hertz:Int, format:Int, channels:Int )</td></tr>
+<tr><td class=docleft width=1%>Returns</td><td class=docright>a ExTAudioSample Object.</td></tr>
+<tr><td class=docleft width=1%>Description</td><td class=docright>Create Extended TAudio Object.</td></tr>
+<tr><td class=docleft width=1%>Information</td><td class=docright>Container for 8bit 16bit 32bit INTEGERs and 32bit FLOAT samples and 1-32 Multi-Channels
+<p>
+<br> <b>Definition of the Sample Ram</b>
+<br> The SampleRam has the same definition like in miniaudio. The samples are organized in Frames. Each frame contains all sample belonging to the same time stamp.
+This is called interlaced. Means
+<br> <pre> | 1st sample LEFT | 1st sample RIGHT | 1st sample CH3 |...1st sample CH n || 2nd sample LEFT | 2nd sample RIGHT | 2nd sample CH3 |......|.... </pre>
+<p>
+<br> <b>Frames</b>: total number of Frames in this Audio.
+<br> <b>Hertz</b> is the frequency in samples per second (Hz) the Samples are captured.
+<br> <b>Channels</b> is 1-32
+<br> <b>Format</b> is one of:
+<table><tr><td> <b>Format</b></td><td><b>Pointer</b></td><td><b>Description</b>
+</td></tr><tr><td>FORMAT_U8</td><td>1</td><td>Unsigned 8 bit
+</td></tr><tr><td>FORMAT_S16</td><td>2</td><td>Signed 16 bit little endian
+</td></tr><tr><td>FORMAT_S32</td><td>4</td><td>Signed 32 bit little endian
+</td></tr><tr><td>FORMAT_F32</td><td>5</td><td>Signed 32 bit Float -1 to +1</table>
+</td></tr>
+</table>
+<table class=doc width=100% cellspacing=3 id=Samples>
+<tr><td class=doctop colspan=2>Method Samples:Byte Ptr()</td></tr>
+<tr><td class=docleft width=1%>Returns</td><td class=docright>a Byte Ptr.</td></tr>
+<tr><td class=docleft width=1%>Description</td><td class=docright>Sample-Pointer to audio data.</td></tr>
+<tr><td class=docleft width=1%>Information</td><td class=docright>Returns the Pointer to the sample datas
+<br> <b>IMPORTANT</b>
+<br> for easy use of the Sample RAM define your  pointer of the correct type with this method:
+<table><tr><td> <b>Format</b></td><td><b>Pointer</b></td><td><b>Example</b>
+</td></tr><tr><td>FORMAT_U8</td><td>Byte Ptr</td><td><pre>Global SampleRAM:Byte Ptr = MySample.Samples()
+</td></tr><tr><td>FORMAT_S16</td><td>Short Ptr</td><td><pre>Global SampleRAM:Short Ptr = MySample.Samples()
+</td></tr><tr><td>FORMAT_S32</td><td>Int Ptr</td><td><pre>Global SampleRAM:Int Ptr = MySample.Samples()
+</td></tr><tr><td>FORMAT_F32</td><td>Float Ptr</td><td><pre> Global SampleRAM:Float Ptr = MySample.Samples()</table>
+</td></tr>
+<tr><td class=docleft width=1%><a href=Samples.bmx class=small>Example</a></td><td class=docright><pre>SuperStrict
+Import mima.miniaudio
+
+Global MiniAudio:TMiniAudio=New TMiniAudio
+
+Global MySample:ExTAudioSample = MiniAudio.LoadExtendedAudioSample("TestABC.ogg", MiniAudio.FORMAT_F32)
+
+'IMPORTANT: Pointer to Samples must have the correct format. Here: Float Ptr 
+Global SampleRAM:Float Ptr= MySample.Samples()
+...
+MiniAudio.OpenDevice( MiniAudio.PLAYBACK, MiniAudio.FORMAT_F32, 1, 48000, MyCallBack)
+...
+
+Function MyCallBack(a%, PlayBuffer:Float Ptr, RecordingBuffer:Short Ptr, Frames:Int)
+	For Local i:Int=0 To frames-1
+		PlayBuffer[i] = SampleRAM[i+ReadPointer]
+		Next
+	Next
+	ReadPointer = ReadPointer + Frames 
+End Function</pre></td></tr>
+</table>
+<table class=doc width=100% cellspacing=3 id=ExtractChannel>
+<tr><td class=doctop colspan=2>Method ExtractChannel:ExTAudioSample(Channel:Int)</td></tr>
+<tr><td class=docleft width=1%>Returns</td><td class=docright>a ExTAudioSample Object.</td></tr>
+<tr><td class=docleft width=1%>Description</td><td class=docright>Extract one Channel.</td></tr>
+<tr><td class=docleft width=1%>Information</td><td class=docright>Extracts one channel of a Multi-Channel Audio-Sample
+<br> <b>Source</b>: The multichannel object
+<br> <b>Channel</b>: the channel to extract.</td></tr>
+</table>
+<table class=doc width=100% cellspacing=3 id=ImportChannel>
+<tr><td class=doctop colspan=2>Method ImportChannel:Int(Source:ExTAudioSample, Channel:Int)</td></tr>
+<tr><td class=docleft width=1%>Description</td><td class=docright>Import one Channel.</td></tr>
+</table>
+<table class=doc width=100% cellspacing=3 id=Clear>
+<tr><td class=doctop colspan=2>Method Clear()</td></tr>
+<tr><td class=docleft width=1%>Description</td><td class=docright>Clears the Sample Buffer.</td></tr>
+<tr><td class=docleft width=1%>Information</td><td class=docright>fills the sample buffer with 0.</td></tr>
 </table>
 <br>
 <h2 id=modinfo>Module Information</h2>
 <table width=100%>
-<tr><th width=1%>Version</th><td>MiniAudio: 0.10.35</td></tr>
-<tr><th width=1%>Version</th><td>Wrapper: 1.20</td></tr>
+<tr><th width=1%>Version</th><td>MiniAudio: 0.10.35 modified!!!</td></tr>
+<tr><th width=1%>Version</th><td>Wrapper: 1.25</td></tr>
 <tr><th width=1%>License</th><td>MIT(0)</td></tr>
 <tr><th width=1%>Copyright</th><td>MINIAUDIO David Reid - mackron@gmail.com  https://miniaud.io</td></tr>
-<tr><th width=1%>Copyright</th><td>WRAPPER Peter Wolkersdorfer	www.midimaster.de, thanks To COL from www.github.com/davecamp</td></tr>
+<tr><th width=1%>Copyright</th><td>WRAPPER Peter Wolkersdorfer info@midimaster.de  http://midimaster.de</td></tr>
+<tr><th width=1%>History</th><td>1.25 again modiefied miniaudio.h because of BlitzMax DEBUG MODE problem</td></tr>
+<tr><th width=1%>History</th><td>1.24 load multichannel audio files OGG FLAC WAV</td></tr>
+<tr><th width=1%>History</th><td>1.23 new extended TAudioSample Object for 32bit float and multichannel</td></tr>
+<tr><th width=1%>History</th><td>1.22 c89 compatible, OGG file support</td></tr>
+<tr><th width=1%>History</th><td>1.21 remove two bugs</td></tr>
 <tr><th width=1%>History</th><td>1.20 Save WAV-file</td></tr>
 <tr><th width=1%>History</th><td>1.19 capture and playback n-channel via hardware devices</td></tr>
 <tr><th width=1%>History</th><td>1.18 Load FLAC and WAV 24bit, 32bit and 32bit-float</td></tr>
-<tr><th width=1%>History</th><td>1.17 modiefied miniaudio.h because of debug problem</td></tr>
 <tr><th width=1%>History</th><td>1.16 enumerate devices and select them</td></tr>
-<tr><th width=1%>History</th><td>1.15 now designed as a module</td></tr>
-<tr><th width=1%>History</th><td>1.14 Add format-, hertz- and channel-converting</td></tr>
-<tr><th width=1%>History</th><td>1.13 Add separate Formats for Capture and Playback</td></tr>
-<tr><th width=1%>History</th><td>1.12 Add LoadSound_MP3 and LoadAudioSample_MP3</td></tr>
-<tr><th width=1%>History</th><td>1.11 Rebuild wrapper as module</td></tr>
-<tr><th width=1%>History</th><td>1.10 Add MP3-Load</td></tr>
 </body></html>
