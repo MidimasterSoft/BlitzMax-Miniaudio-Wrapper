@@ -1,3 +1,9 @@
+' example to demonstrate capturing audio with miniaudio
+' and transfering datas to the old BlitzMax TAudioSample type
+' Quality is FORMAT_S16 means compatible quality to TAudioSample
+' when recording is stopped the TAudioSample is converted into a TSound and played
+
+
 SuperStrict
 Import mima.miniaudio
 
@@ -8,18 +14,20 @@ Graphics 400,300
 Const  HERTZ:Int = 48000
 
 Global MiniAudio:TMiniAudio=New TMiniAudio
-MiniAudio.GetDevice( MiniAudio.DUPLEX, Miniaudio.FORMAT_S16, 1, HERTZ, MyCallBack)
+'if comment out this line capture will take the default capture device:
+Miniaudio.SelectDevices(0,1)
+MiniAudio.OpenDevice( MiniAudio.DUPLEX, Miniaudio.FORMAT_S16, 1, HERTZ, MyCallBack)
 
-
-Global Source:TAudioSample=CreateAudioSample( HERTZ*61,  HERTZ, SF_MONO16LE)  '60 seconds
-Global SoundBank:TBank=CreateStaticBank(Source.Samples, Source.Length)
+' we need a TaudioSample for storing the incoming samples and a SHORT PTR to handle them
+Global Recording:TAudioSample=CreateAudioSample( HERTZ*61,  HERTZ, SF_MONO16LE)  '60 seconds
+Global RecordingRam:Short Ptr = Recording.Samples
 
 Global WritePointer:Int
 
 Global RecordMode%, Audio:TChannel
 
-Local Music:TSound =LoadSound(Source)
-audio=PlaySound(music)
+Local Music:TSound =LoadSound(Recording)
+Audio=PlaySound(Music)
 
 SetClsColor 255,255,255
 Repeat
@@ -30,8 +38,8 @@ Repeat
 			If RecordMode=0
 				Print "PLAY"
 				MiniAudio.StopDevice()
-				Local Music:TSound =LoadSound(Source)
-				audio=PlaySound(music)
+				Local Music:TSound =LoadSound(Recording)
+				Audio=PlaySound(music)
 			Else
 				Print "RECORD"
 				ClearSample()
@@ -42,16 +50,25 @@ Repeat
 		EndIf  
     Flip 0
 Until AppTerminate()
-Miniaudio.KillDevice()
+Miniaudio.CloseDevice()
 End 
 
 
-Function MyCallBack(a%, PlayBackBuffer:Short Ptr, RecordingBuffer:Short Ptr, Frames%)
-	For Local i%=0 To frames-1
-		PlayBackBuffer[i]=RecordingBuffer[i]
-		SoundBank.PokeShort(WritePointer+2*i , RecordingBuffer[i])
+Function MyCallBack(a%, PlayBackBuffer:Short Ptr, RecordingBuffer:Short Ptr, Frames:Int)
+	' cares about not to overrun the TAudioSample-size:
+	If WritePointer>HERTZ*60 Then WritePointer=0
+
+	For Local i:Int=0 To frames-1
+		' fetch the sample:
+		Local value:Short   = RecordingBuffer[i]
+		
+		' duplx it immediately:
+		PlayBackBuffer[i] = value
+		
+		'and transfer it to the TAudioSample:
+		RecordingRAM[WritePointer+i] = value
 	Next
-    WritePointer = (WritePointer + 2*Frames) Mod (HERTZ*60)
+    WritePointer = WritePointer + Frames
 End Function 
 
 
@@ -86,7 +103,7 @@ End Function
 
 
 Function ClearSample()
-				For Local i%=0 To (HERTZ*60) Step 4
-					SoundBank.PokeInt(i,0)
-				Next 				
+	For Local i:Int=0 To HERTZ*60
+		RecordingRAM[i]=0
+	Next 				
 End Function

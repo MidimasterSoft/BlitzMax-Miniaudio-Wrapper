@@ -5,7 +5,7 @@ Graphics 800,600
 
 ' Setup of the device:
 Global MiniAudio:TMiniAudio=New TMiniAudio
-MiniAudio.GetDevice( MiniAudio.PLAYBACK, Miniaudio.FORMAT_S16, 1, 48000, MyCallBack)
+MiniAudio.OpenDevice( MiniAudio.PLAYBACK, Miniaudio.FORMAT_S16, 1, 48000, MyCallBack)
 
 ' now start it:
 MiniAudio.StartDevice()
@@ -25,7 +25,7 @@ Repeat
 	Delay 1
 	Flip 
 Until AppTerminate()
-Miniaudio.KillDevice()
+Miniaudio.CloseDevice()
 End 
 
 

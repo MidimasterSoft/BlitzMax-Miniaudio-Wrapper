@@ -2,10 +2,10 @@ SuperStrict
 Import mima.miniaudio
 
 Graphics 800,600
-
+Const CHANNELS:Int=2
 ' Setup of the device:
 Global MiniAudio:TMiniAudio=New TMiniAudio
-MiniAudio.GetDevice( MiniAudio.PLAYBACK, Miniaudio.FORMAT_S16, 2, 48000, MyCallBack)
+MiniAudio.OpenDevice( MiniAudio.PLAYBACK, Miniaudio.FORMAT_S16, CHANNELS, 48000, MyCallBack)
 
 
 ' now start it:
@@ -23,15 +23,15 @@ Repeat
 		Delay 0
 	Flip 1
 Until AppTerminate()
-Miniaudio.KillDevice()
+Miniaudio.CloseDevice()
 End 
 
 
 Function MyCallBack(a%, PlayBuffer:Short Ptr, RecordingBuffer:Short Ptr, Frames%)
-	For Local i%=0 To frames-1
+	For Local i:Int=0 To Frames-1
         arc1=arc1+MouseX()/100.0+1
         arc2=arc2+MouseY()/100.0+1
- 	   PlayBuffer[2*i]  = Int(Sin(arc1)*10000.0)
-	   PlayBuffer[2*i+1]= Int(Sin(arc2)*10000.0)
+ 	   PlayBuffer[CHANNELS*i+0] = Int(Sin(arc1)*10000.0)
+	   PlayBuffer[CHANNELS*i+1] = Int(Sin(arc2)*10000.0)
 	Next 
 End Function 

@@ -6,7 +6,7 @@ Global MiniAudio:TMiniAudio=New TMiniAudio
 
 Global Stream:MMStreamID= MiniAudio.OpenWavFile("test.wav" , Miniaudio.FORMAT_F32 , 3 , 44100 )
 Print "StreamID=" + Stream.Id
-Global mode%, time%, Part%
+Global actChannel%, time%, Part%
 While Part<10
 	If time<MilliSecs()
 		time = MilliSecs() + 500
@@ -20,14 +20,14 @@ MiniAudio.CloseWavFile(Stream )
 End 
 
 Function PartRecord()
-	mode = (mode+1) Mod 3 ' only for demonstration of 3 channels
+	actChannel = (actChannel+1) Mod 3 ' only for demonstration of 3 channels
 
-	Local Bank:TBank=CreateBank(5000*4*3+12)    ' 44.1kHz * 32bit * 3tracks * 2seconds
+	Local Bank:TBank=CreateBank(5000*4*3+12)    ' 5000frames * 32bit * 3tracks +securitybuffer
 	Global FrameLength% = 4*3  ' 32bit*3tracks
 	For Local I%=0 To 4999
 		Local pos:Int=i*FrameLength
 		Local v#=Sin(i)/2
-		Bank.PokeFloat(Pos+mode*4, v)
+		Bank.PokeFloat(Pos+actChannel*4, v) '4=32bit
 	Next 
 	MiniAudio.WriteWavFile(Stream, Bank, 5000)
 End Function 

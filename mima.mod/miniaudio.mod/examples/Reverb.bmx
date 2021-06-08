@@ -1,27 +1,27 @@
 SuperStrict
-Framework BRL.GlMax2D
-Import Brl.standardio
-Import brl.audiosample
-Import brl.oggloader
-Import brl.bank
 Import mima.miniaudio
 
 Graphics 800,400
 
 ' Setup of the device:
 Global MiniAudio:TMiniAudio=New TMiniAudio
-MiniAudio.GetDevice( MiniAudio.PLAYBACK, Miniaudio.FORMAT_S16, 1, 12000, MyCallBack)
 
 
-Global Source:TAudioSample=LoadAudioSample("TestABC.ogg")
-Global SoundBank:TBank=CreateStaticBank(Source.Samples, Source.Length*2)
+Global Source:ExTAudioSample = MiniAudio.LoadExtendedAudioSample("TestABC.ogg", MiniAudio.FORMAT_S32)
+Print Source.format
+Print Source.Hertz
+Print Source.channels
+MiniAudio.OpenDevice( Miniaudio.PLAYBACK, Source.Format, Source.Channels, Source.Hertz, MyCallBack)
+
 
 ' this will be 32bit signed INT:
-Global EchoBank:TBank=CreateBank(Source.Length*4+20000)
+Global EchoBank:TBank=CreateBank(Source.Capacity*4+20000)
+Global EchoRAM:Int Ptr = EchoBank.lock()
+
 ' now start it:
 MiniAudio.StartDevice()
 
-Global Pointer:Int , Reverb%
+Global ReadPointer:Int , Reverb%
 SetClsColor 255,255,255
 Repeat
     Cls
@@ -39,38 +39,38 @@ Repeat
 		EndIf 
     Flip
 Until AppTerminate()
-Miniaudio.KillDevice()
+Miniaudio.CloseDevice()
 End 
 
 
-Function MyCallBack(a%, Buffer:Short Ptr, RecordingBuffer:Short Ptr, Frames%)
+
+Function MyCallBack(a%, PlayBuffer:Int Ptr, RecordingBuffer:Int Ptr, Frames:Int)
+	If ReadPointer>Source.Frames-Frames Then ReadPointer=0
+
 	' here you manipulate the sound:
-	For Local i%=0 To frames-1
-		Local da% = Pointer/2+i
-		Local V%= ShortInt(SoundBank.PeekShort(pointer+2*i))
-		V = V + echobank.PeekInt(da*4)
-		CalculateReverb da, v
-		Buffer[i]= V
+	For Local i:Int=0 To Frames-1
+		Local now%=ReadPointer+ i
+		Local Value:Int =  Source.SampleInt[now] 
+		Value =  Value + EchoRAM[now]
+		CalculateReverb now, Value
+		PlayBuffer[i]= Value
 	Next
-    Pointer=(Pointer + 2*Frames) Mod 480000
+    ReadPointer=ReadPointer + Frames
 End Function 
 
 
-Function CalculateReverb(when%, value#)
+
+Function CalculateReverb(when:Int, value:Float)
 	If reverb=0 Return 
-	Local f#=0.40, dist#=2700, df#=0.72
 
-	For Local j%=0 To 99
-		value=value*f
-		dist=dist*df
-		Local when2%=Int(when+Dist)*4
-		Local w%=echobank.PeekInt(when2) + value
-		Echobank.PokeInt(when2, w)
-	Next 
-	Echobank.PokeInt(when*4,0)
+	Local f#=0.69, distance#=1000, df#=0.83, Early%=2000
+	value=Value*0.17 + EchoRAM[when]/20
+	For Local j%=0 To 9
+		value    = value*f		
+		distance = distance*df
+		Local later:Int = Int(when+Early+ distance)
+		EchoRAM[later]  = EchoRAM[later] + value
+	Next
+	EchoRAM[when]=0 
 End Function 
 
-
-Function ShortInt:Int( s:Int )
-    Return (s Shl 16) Sar 16
-End Function

@@ -5,17 +5,16 @@ Graphics 800,400
  
 ' Setup of the device:
 Global MiniAudio:TMiniAudio=New TMiniAudio
-MiniAudio.GetDevice( MiniAudio.PLAYBACK, Miniaudio.FORMAT_S16, 1, 12000, MyCallBack)
-
+MiniAudio.OpenDevice( MiniAudio.PLAYBACK, Miniaudio.FORMAT_S16, 1, 12000, MyCallBack)
 Global Source:TAudioSample=LoadAudioSample("TestABC.ogg")
-Print source.length
+Global SampleRam:Short Ptr=Source.Samples
 
 
-Global SoundBank:TBank=CreateStaticBank(Source.Samples, Source.Length*2) 
+'Global SoundBank:TBank=CreateStaticBank(Source.Samples, Source.Length*2) 
 ' now start it:
 MiniAudio.StartDevice()
  
-Global Pointer:Int , LastMouse:Int , Speed:Int=1
+Global ReadPointer:Int , LastMouse:Int , Speed:Int=1
  
 Repeat
     Cls
@@ -25,15 +24,15 @@ Repeat
         SetColor 1,1,1
         DrawRect 52,302,696,16
         SetColor 255,255,255
-        DrawOval 50+ Pointer*680/Source.Length/2,298,25,25    
+        DrawOval 50+ ReadPointer*680/Source.Length,298,25,25    
         SetColor 1,1,1
-        DrawOval 52+ Pointer*680/Source.Length/2,300,21,21    
+        DrawOval 52+ ReadPointer*680/Source.Length,300,21,21    
         If MouseDown(1)
                 If MouseX()>49 And MouseX()<745
                         If LastMouse<>MouseX()
                                 LastMouse = MouseX()
-                                Local p%=(MouseX()-50)*Source.Length*2/700
-                                Pointer= p & $FFFFF4
+                                Local p%=(MouseX()-50)*Source.Length/700
+                                ReadPointer= p & $FFFFF4
                                 Speed=2
                         Else
                                 Speed=1
@@ -45,15 +44,16 @@ Repeat
         EndIf
     Flip
 Until AppTerminate()
-Miniaudio.KillDevice()
+Miniaudio.CloseDevice()
 End
  
  
 Function MyCallBack(a%, PlayBuffer:Short Ptr, RecordingBuffer:Short Ptr, Frames%)
+        If ReadPointer>240000 Then ReadPointer=0
         ' here you manipulate the sound:
 		Local jump%=2*speed
         For Local i%=0 To frames-1
-				PlayBuffer[i]= SoundBank.PeekShort(pointer+i*jump)
+				PlayBuffer[i]= SampleRam[ReadPointer+i]
         Next
-        Pointer=(Pointer + Frames*jump) Mod  480000
+		ReadPointer = ReadPointer + Frames
 End Function 
