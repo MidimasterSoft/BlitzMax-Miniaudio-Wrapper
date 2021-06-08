@@ -141,4 +141,6 @@ Extract one Channel from a ExTAudioSample.
 
 ### ImportChannel 
 Imports one Channel into a ExTAudioSample.  
-Clear Clears the Sample Buffer.  
+
+### Clear 
+Clears the Sample Buffer.  
