@@ -44,11 +44,3 @@ End Function
 
 
 ```
-
-
-All these will move the next days to github.
-
-
-
-
-
