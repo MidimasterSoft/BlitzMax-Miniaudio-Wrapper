@@ -60,7 +60,7 @@ void mimaOnMAThreadEntry() {
 }
 void mimaOnMAThreadExit() {
 	void* handle = pthread_self();
-	DEBUG_OUTPUT("Unregistering thread handle: 0x%08x\n", id);
+	DEBUG_OUTPUT("Unregistering thread handle: 0x%08x\n", handle);
 	mimaThread** Threads = &maThreads;
 	mimaThread* ThisThread;
 	while(ThisThread = *Threads)
