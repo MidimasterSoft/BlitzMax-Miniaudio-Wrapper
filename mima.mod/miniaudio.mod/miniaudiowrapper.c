@@ -1,15 +1,20 @@
 //*************************************************************************
-// version info 1.25
-// 2021-06-01: add modiefied midiaudio.h
+// version info 1.26
+// 2021-06-14: debug information only in debug version
 // this code is public domain
 // author: Peter Wolkersdorfer www.midimaster
 // thanks to col from https://github.com/davecamp
 //************************************************************************
 
 
-#define DEBUG_OUTPUT(...) printf(__VA_ARGS__); fflush(0)
-#include <brl.mod/blitz.mod/blitz.h>
+#if !defined(NDEBUG)
+	#define DEBUG_OUTPUT(...) printf(__VA_ARGS__); fflush(0)
+	#define MA_DEBUG_OUTPUT
+#else
+	#define DEBUG_OUTPUT
+#endif
 
+#include <brl.mod/blitz.mod/blitz.h>
 #define STB_VORBIS_HEADER_ONLY
 #include "stb_vorbis.c"    // Enables Vorbis decoding.
 
@@ -82,10 +87,10 @@ void mimaOnMAThreadExit() {
 
 #define MINIAUDIO_IMPLEMENTATION
 #define MA_API extern
-#define MA_DEBUG_OUTPUT 
+//#define MA_DEBUG_OUTPUT 
 #define MA_LOG_LEVEL_INFO 4
 #define MA_LOG_LEVEL MA_LOG_LEVEL_INFO
-#define MA_BLITZMAX_THREAD_COMPATIBILITY
+//#define MA_BLITZMAX_THREAD_COMPATIBILITY
 
 #include "miniaudiox.h"
 
@@ -154,15 +159,15 @@ int MM_WriteEncoder(ma_encoder *encoder, void *pPCMFramesToWrite, int frames){
 
 // enumerate hardware devices:
 struct ma_context *MM_GetContext(char* list){
-	printf("MM CREATE CONTEXT \n");
+	DEBUG_OUTPUT("MM CREATE CONTEXT \n");
 	struct ma_context *instance;
 	//int length = sizeof(struct ma_context);
 	int length =ma_context_sizeof();
-    printf("length of  context %i  \n",length);
+    DEBUG_OUTPUT("length of  context %i  \n",length);
 	instance = (struct ma_context*) malloc(length);
 	
     if (ma_context_init(NULL, 0, NULL, instance) != MA_SUCCESS) {
-        printf("ERROR #mm1 while ma_context_init \n");
+        DEBUG_OUTPUT("ERROR #mm1 while ma_context_init \n");
 		return NULL;	
     }
     ma_device_info* pPlaybackInfos;
@@ -170,22 +175,22 @@ struct ma_context *MM_GetContext(char* list){
     ma_device_info* pCaptureInfos;
     ma_uint32 captureCount;
     if (ma_context_get_devices(instance, &pPlaybackInfos, &playbackCount, &pCaptureInfos, &captureCount) != MA_SUCCESS) {
-        printf("ERROR #mm2 while ma_context_get_devices \n");
+        DEBUG_OUTPUT("ERROR #mm2 while ma_context_get_devices \n");
 		return NULL;	
     }
-	printf("list of playback devices: \n");
+	DEBUG_OUTPUT("list of playback devices: \n");
     ma_uint32 iDevice;
     for (iDevice = 0; iDevice < playbackCount; iDevice += 1) {
 		strncat(list , pPlaybackInfos[iDevice].name, 9999);
 		strncat(list , "||", 9999);
-        printf("%d - %s  \n", iDevice, pPlaybackInfos[iDevice].name);
+        DEBUG_OUTPUT("%d - %s  \n", iDevice, pPlaybackInfos[iDevice].name);
     }
 	strncat(list , "|IN||", 9999);
-	printf("list of capture devices: \n");
+	DEBUG_OUTPUT("list of capture devices: \n");
     for (iDevice = 0; iDevice < captureCount; iDevice += 1) {
 		strncat(list , pCaptureInfos[iDevice].name, 9999);
 		strncat(list , "||", 9999);
-        printf("%d - %s\n", iDevice, pCaptureInfos[iDevice].name);
+        DEBUG_OUTPUT("%d - %s\n", iDevice, pCaptureInfos[iDevice].name);
     }
 	strncat(list , "|END", 9999);
 	DEBUG_OUTPUT("** end of context ************************* \n");
@@ -197,7 +202,7 @@ struct ma_context *MM_GetContext(char* list){
 
 //one pass converting:
 int MM_Convert(void* pOut, int frames, int format, int channels, int hertz, void* pIn, int SizeIn, int FormatIn, int ChannelsIn, int HertzIn){
-	printf("MM CONVERTER ONE PASS \n");
+	DEBUG_OUTPUT("MM CONVERTER ONE PASS \n");
 	int result = ma_convert_frames( pOut, frames, format, channels, hertz, pIn, SizeIn, FormatIn, ChannelsIn, HertzIn);
 	DEBUG_OUTPUT("------ \n");
 	return result;	
@@ -208,7 +213,7 @@ int MM_Convert(void* pOut, int frames, int format, int channels, int hertz, void
 
 //only decoding parameters:
 int MM_DecodeParameter(char* FileName, int *frames, int* sampleRate, int* channels, int* format){
-	printf("MM DECODER PARAMETER \n");
+	DEBUG_OUTPUT("MM DECODER PARAMETER \n");
 	//ma_decoder_config audioConfig = ma_decoder_config_init(ma_format_s16, 0, 0);
 	ma_decoder_config audioConfig = ma_decoder_config_init(0, 0, 0);
 	long long frameCount;
@@ -232,7 +237,7 @@ int MM_DecodeParameter(char* FileName, int *frames, int* sampleRate, int* channe
 
 //one pass decoding 16bit:
 int MM_Decode16bit(char* FileName, short *TSampleRAM){
-	printf("MM DECODER ONE PASS 16bit  \n");
+	DEBUG_OUTPUT("MM DECODER ONE PASS 16bit  \n");
 	ma_decoder_config audioConfig = ma_decoder_config_init(ma_format_s16, 0, 0);
 	long long frameCount;
 	short* pAudioData;
@@ -255,7 +260,7 @@ int MM_Decode16bit(char* FileName, short *TSampleRAM){
 
 //one pass decoding 32bit float:
 int MM_Decode(char* FileName, float *TSampleRAM){
-	printf("MM DECODER ONE PASS 32bit \n");
+	DEBUG_OUTPUT("MM DECODER ONE PASS 32bit \n");
 	ma_decoder_config audioConfig = ma_decoder_config_init(ma_format_f32, 0, 0);
 	long long frameCount;
 	float* pAudioData;
@@ -273,7 +278,7 @@ int MM_Decode(char* FileName, float *TSampleRAM){
 
 //one pass decoding 32bit int:
 int MM_Decode32(char* FileName, int *TSampleRAM){
-	printf("MM DECODER ONE PASS 32bit \n");
+	DEBUG_OUTPUT("MM DECODER ONE PASS 32bit \n");
 	ma_decoder_config audioConfig = ma_decoder_config_init(ma_format_s32, 0, 0);
 	long long frameCount;
 	int* pAudioData;
@@ -294,7 +299,7 @@ int MM_Decode32(char* FileName, int *TSampleRAM){
 
 // call for config:
 struct ma_device_config *ma_device_config_init_glue(struct ma_context *context, int DeviceTyp, int ID_Playback, int ID_Capture) {
-		printf("START_DEVICE_GLUE \n");
+		DEBUG_OUTPUT("START_DEVICE_GLUE \n");
 		struct ma_device_config *config;
 		int length = sizeof(struct ma_device_config);
 		config = (struct ma_device_config*) malloc(length);	
@@ -328,7 +333,7 @@ struct ma_device_config *ma_device_config_init_glue(struct ma_context *context, 
 
 // Device Filler:
 void MM_SetDeviceConfig (struct ma_device_config *config, int playformat, int playchannels, int captformat, int captchannels, int hertz, ma_device_callback_proc Callback) {
-	printf("FILL_VALUE_B \n");
+	DEBUG_OUTPUT("FILL_VALUE_B \n");
 	config->sampleRate        = hertz;
 	config->playback.format   = playformat;
 	config->playback.channels = playchannels;
@@ -343,7 +348,7 @@ void MM_SetDeviceConfig (struct ma_device_config *config, int playformat, int pl
 
 // Call for the device
 struct ma_device *MM_GetDevice(struct ma_device_config *config , struct ma_context *context) {
-	printf("CREATE A DEVICE \n");
+	DEBUG_OUTPUT("CREATE A DEVICE \n");
 	struct ma_device *device;
 
 	int length = sizeof(struct ma_device);
@@ -356,4 +361,6 @@ struct ma_device *MM_GetDevice(struct ma_device_config *config , struct ma_conte
 	return device;	 
 
 }
+
+
 
