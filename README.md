@@ -1,4 +1,4 @@
-# BlitzMax-Miniaudio-Wrapper 1.25 (2021-06-08)
+# BlitzMax-Miniaudio-Wrapper 1.26 (2021-06-14)
 a binding/wrapper for the audio library Miniaudio to the language BlitzMax  
 
 The wrapper enables to use the C-library miniaudio (https://github.com/mackron/miniaudio) in the BASIC language BlitzMax (https://blitzmax.org/)
