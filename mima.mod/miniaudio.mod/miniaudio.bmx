@@ -1,16 +1,17 @@
 SuperStrict
 
 Rem 
-bbdoc: MiniAudio Wrapper
-about: Binding/Wrapper for MiniAudio for BlitzMax.
+bbdoc: MiniAudio Binding
+about: Binding for MiniAudio for BlitzMax.
 End Rem
 Module mima.miniaudio
 ModuleInfo "Version: MiniAudio: 0.10.35 modified!!!"
-ModuleInfo "Version: Wrapper: 1.25"
+ModuleInfo "Version: Wrapper: 1.26"
 ModuleInfo "License: MIT(0)"
 ModuleInfo "Copyright: MINIAUDIO David Reid - mackron@gmail.com  https://miniaud.io"
-ModuleInfo "Copyright: WRAPPER Peter Wolkersdorfer info@midimaster.de  http://midimaster.de"
+ModuleInfo "Copyright: BINDING Peter Wolkersdorfer info@midimaster.de  http://midimaster.de"
 
+ModuleInfo "History: 1.26 now debug information appear only in DEBUG mide"
 ModuleInfo "History: 1.25 again modiefied miniaudio.h because of BlitzMax DEBUG MODE problem"
 ModuleInfo "History: 1.24 load multichannel audio files OGG FLAC WAV"
 ModuleInfo "History: 1.23 new extended TAudioSample Object for 32bit float and multichannel "
@@ -19,7 +20,6 @@ ModuleInfo "History: 1.21 remove two bugs"
 ModuleInfo "History: 1.20 Save WAV-file"
 ModuleInfo "History: 1.19 capture and playback n-channel via hardware devices"
 ModuleInfo "History: 1.18 Load FLAC and WAV 24bit, 32bit and 32bit-float"
-ModuleInfo "History: 1.16 enumerate devices and select them"
 
 
 
@@ -76,6 +76,7 @@ about: Define Device Configuration
 
 End Rem
 		Method OpenDevice:Int(DeviceType:Int, Format:Int, Channels:Int, SampleRate:Int, UserCallBackPointer: Byte Ptr)
+
 			Return OpenDevice_II(DeviceType, Format, Channels, Format, Channels, SampleRate, UserCallBackPointer)
 		End Method
 
@@ -106,7 +107,7 @@ about: Define two different Device Configurations for Duplex
 End Rem
 		Method OpenDevice_II:Int(DeviceType:Int, PlayFormat:Int, PlayChannels:Int,  CaptFormat:Int, CaptChannels:Int,SampleRate:Int, UserCallBackPointer: Byte Ptr)
 			If GetDeviceConfig(DeviceType)=False 
-				Print  "Miniaudio could not be startet"
+				DebugLog  "Miniaudio could not be startet"
 				Return False
 			EndIf 
 			SetDevice(PlayFormat, PlayChannels, CaptFormat, CaptChannels, SampleRate, UserCallBackPointer)
@@ -189,7 +190,7 @@ End Rem
 			EndIf 
 			SelectedPlayBack = ID_Playback
 			SelectedCapture = ID_Capture
-			Print "selected ID: P=" + SelectedPlayBack + " C=" + SelectedCapture
+			DebugLog "selected ID: P=" + SelectedPlayBack + " C=" + SelectedCapture
 		End Method
 
 
@@ -223,13 +224,13 @@ End Rem
 			Local Hertz:Int, Channels:Int, Frames:Int, Format:Int
 			Local result:Int= MM_DecodeParameter(File.ToCString(), Varptr(Frames), Varptr(Hertz), Varptr(Channels), Varptr(Format))
 			If Channels>2
-				Print "ERROR not mono or stereo while loading TAudioSample"
+				DebugLog "ERROR not mono or stereo while loading TAudioSample"
 			'	Return Null
 			EndIf 
 			Local Sample:TAudioSample=CreateAudioSample(Frames*Channels,Hertz,SF_MONO16LE)
 			result= MM_Decode16bit(File.ToCString(), Sample.Samples)
 			If result=0
-				Print "ERROR while loading TAudioSample"
+				DebugLog "ERROR while loading TAudioSample"
 				Return Null
 			EndIf 
 			Return Sample 		
@@ -256,13 +257,13 @@ See TYPE #ExTAudioSample for more informations.
 End Rem
 		Method LoadExtendedAudioSample:ExTAudioSample(File:String, Format:Int=FORMAT_F32)
 			Local Hertz:Int, Channels:Int, Frames:Int, OldFormat:Int
-			Print "format vorher " + format
+			DebugLog "format vorher " + format
 			Local result:Int= MM_DecodeParameter(File.ToCString(), Varptr(Frames), Varptr(Hertz), Varptr(Channels), Varptr(oldFormat))
 			If result=0
-				Print "ERROR while loading TAudioSample"
+				DebugLog "ERROR while loading TAudioSample"
 				Return Null
 			EndIf 
-			Print "format vorher " + format
+			DebugLog "format vorher " + format
 			Local Sample:ExTAudioSample = ExTAudioSample.Create(Frames, Hertz, Format, Channels)
 			If Format=FORMAT_S32
 				result= MM_Decode32(File.ToCString(),  Sample.Samples)			
@@ -564,7 +565,7 @@ End Rem
 					sourceChannels=2	
 					sourceSize=source.length/2
 				Default
-					Print "source format not suppported"
+					DebugLog "source format not suppported"
 					Return Null
 			End Select 
 			'estimate the number of samples:
@@ -620,7 +621,7 @@ End Rem
 					sourceChannels=2	
 					sourceSize=source.length/2
 				Default
-					Print "source format not suppported"
+					DebugLog "source format not suppported"
 					Return Null
 			End Select 
 			'estimate the number of samples:
@@ -762,7 +763,7 @@ This is called interlaced. Means
 End Rem 		
 	Function Create:ExTAudioSample(frames:Int, hertz:Int, format:Int, channels:Int )
 		Local loc:ExTAudioSample = New ExTAudioSample
-		Print "format=" +  format
+		DebugLog "format=" +  format
 		
 		loc.Channels    = Channels
 		loc.Frames      = frames
@@ -783,7 +784,7 @@ End Rem
 		loc.SampleShort = loc.SampleByte
 		loc.SampleInt   = loc.SampleByte
 		loc.SampleFloat = loc.SampleByte
-		Print "Create ExTAudio size=" + loc.capacity+ " " + loc.format + " " + format
+		DebugLog "Create ExTAudio size=" + loc.capacity+ " " + loc.format + " " + format
 		Return loc
 	End Function	
 	
@@ -887,4 +888,5 @@ End Rem
 		Next 
 	End Method 
 End Type 
+
 
