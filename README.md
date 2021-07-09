@@ -13,8 +13,8 @@ The wrapper uses the MiniAudio V0.10.37. It is includes here as one file miniaud
 
 ## Known Issues
 
-Runs perfect on BlitzMax Windows in RELEASE and DEBUG mode
-Runs perfect on BlitzMax MAC OsX in RELEASE mode, but V1.27 crashes on BlitzMax DEBUG mode. We work on a solution...
+Runs perfect on BlitzMax ##Windows in RELEASE and DEBUG mode.
+Runs perfect on BlitzMax ##MAC ##OsX in RELEASE mode, but V1.27 crashes on Mac DEBUG mode. We work on a solution...
 
 
 ## Example
