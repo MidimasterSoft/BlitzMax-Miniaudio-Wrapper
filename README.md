@@ -10,6 +10,13 @@ And a discussion forum here: https://www.syntaxbomb.com/index.php/topic,8388.0.h
 
 The wrapper uses the MiniAudio V0.10.37. It is includes here as one file miniaudio.h
 
+
+## Known Issues
+
+Runs perfect on BlitzMax Windows in RELEASE and DEBUG mode
+Runs perfect on BlitzMax MAC OsX in RELEASE mode, but V1.27 crashes on BlitzMax DEBUG mode. We work on a solution...
+
+
 ## Example
 
 Here is a minimal example. It opens the device and makes some noise
