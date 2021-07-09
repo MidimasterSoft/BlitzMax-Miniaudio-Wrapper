@@ -1,6 +1,6 @@
 //*************************************************************************
-// version info 1.26
-// 2021-06-14: debug information only in debug version
+// version info 1.27
+// 2021-07-09: uses regular miniaudio.h 10.37 now
 // this code is public domain
 // author: Peter Wolkersdorfer www.midimaster
 // thanks to col from https://github.com/davecamp
@@ -87,17 +87,16 @@ void mimaOnMAThreadExit() {
 
 #define MINIAUDIO_IMPLEMENTATION
 #define MA_API extern
-//#define MA_DEBUG_OUTPUT 
+ 
 #define MA_LOG_LEVEL_INFO 4
 #define MA_LOG_LEVEL MA_LOG_LEVEL_INFO
-//#define MA_BLITZMAX_THREAD_COMPATIBILITY
 
-#include "miniaudiox.h"
+#include "miniaudio.h"
 
 // The stb_vorbis implementation must come after the implementation of miniaudio.
 #undef STB_VORBIS_HEADER_ONLY
 #include "stb_vorbis.c"
-
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -235,6 +234,8 @@ int MM_DecodeParameter(char* FileName, int *frames, int* sampleRate, int* channe
 
 
 
+
+
 //one pass decoding 16bit:
 int MM_Decode16bit(char* FileName, short *TSampleRAM){
 	DEBUG_OUTPUT("MM DECODER ONE PASS 16bit  \n");
@@ -259,7 +260,7 @@ int MM_Decode16bit(char* FileName, short *TSampleRAM){
 
 
 //one pass decoding 32bit float:
-int MM_Decode(char* FileName, float *TSampleRAM){
+int MM_Decode32f(char* FileName, float *TSampleRAM){
 	DEBUG_OUTPUT("MM DECODER ONE PASS 32bit \n");
 	ma_decoder_config audioConfig = ma_decoder_config_init(ma_format_f32, 0, 0);
 	long long frameCount;
@@ -361,6 +362,4 @@ struct ma_device *MM_GetDevice(struct ma_device_config *config , struct ma_conte
 	return device;	 
 
 }
-
-
 
