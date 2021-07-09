@@ -5,12 +5,13 @@ bbdoc: MiniAudio Binding
 about: Binding for MiniAudio for BlitzMax.
 End Rem
 Module mima.miniaudio
-ModuleInfo "Version: MiniAudio: 0.10.35 modified!!!"
-ModuleInfo "Version: Wrapper: 1.26"
+ModuleInfo "Version: MiniAudio: 0.10.37"
+ModuleInfo "Version: Wrapper: 1.27"
 ModuleInfo "License: MIT(0)"
 ModuleInfo "Copyright: MINIAUDIO David Reid - mackron@gmail.com  https://miniaud.io"
 ModuleInfo "Copyright: BINDING Peter Wolkersdorfer info@midimaster.de  http://midimaster.de"
 
+ModuleInfo "History: 1.27 uses regular miniaudio.h 10.37 now"
 ModuleInfo "History: 1.26 now debug information appear only in DEBUG mide"
 ModuleInfo "History: 1.25 again modiefied miniaudio.h because of BlitzMax DEBUG MODE problem"
 ModuleInfo "History: 1.24 load multichannel audio files OGG FLAC WAV"
@@ -228,6 +229,10 @@ End Rem
 			'	Return Null
 			EndIf 
 			Local Sample:TAudioSample=CreateAudioSample(Frames*Channels,Hertz,SF_MONO16LE)
+			
+			
+			''''xxxx result= MM_Decode(File.ToCString(), Sample.Samples, FORMAT_S16)
+			
 			result= MM_Decode16bit(File.ToCString(), Sample.Samples)
 			If result=0
 				DebugLog "ERROR while loading TAudioSample"
@@ -257,7 +262,7 @@ See TYPE #ExTAudioSample for more informations.
 End Rem
 		Method LoadExtendedAudioSample:ExTAudioSample(File:String, Format:Int=FORMAT_F32)
 			Local Hertz:Int, Channels:Int, Frames:Int, OldFormat:Int
-			DebugLog "format vorher " + format
+			DebugLog "xx format vorher " + format
 			Local result:Int= MM_DecodeParameter(File.ToCString(), Varptr(Frames), Varptr(Hertz), Varptr(Channels), Varptr(oldFormat))
 			If result=0
 				DebugLog "ERROR while loading TAudioSample"
@@ -265,11 +270,16 @@ End Rem
 			EndIf 
 			DebugLog "format vorher " + format
 			Local Sample:ExTAudioSample = ExTAudioSample.Create(Frames, Hertz, Format, Channels)
+			
+			
+			
 			If Format=FORMAT_S32
 				result= MM_Decode32(File.ToCString(),  Sample.Samples)			
 			Else
-				result= MM_Decode(File.ToCString(),  Sample.Samples)
+				result= MM_Decode32f(File.ToCString(),  Sample.Samples)
 			EndIf 
+			
+			''' xxxxx result= MM_Decode(File.ToCString(),  Sample.Samples, Format)
 			Return Sample 		
 		End Method
 
@@ -294,7 +304,7 @@ about: Saves a TAudioSample as a WAV file.
 Use #OpenWavFile() if you need to convert format or data is longer than 2GB
 End Rem
 		Method SaveTAudioSample(FileName:String, Sample:TAudioSample)
-		
+		 
 			Local Channels:Int = 1
 			Local Format:Int = FORMAT_U8
 			Select Sample.Format
@@ -696,10 +706,12 @@ Extern "C"
 	Function MM_WriteEncoder (Encoder:Byte Ptr, SampleRam:Byte Ptr, Frames:Int) 
 
 	Function MM_GetContext:Byte Ptr(StringRam:Byte Ptr)
+
 	
 	Function MM_Decode16bit:Int(FileName:Byte Ptr, SampleRam:Byte Ptr)
 	Function MM_Decode32:Int(FileName:Byte Ptr, SampleRam:Byte Ptr)
-	Function MM_Decode:Int(FileName:Byte Ptr, SampleRam:Byte Ptr)
+	Function MM_Decode32f:Int(FileName:Byte Ptr, SampleRam:Byte Ptr)
+	'Function MM_Decode:Int(FileName:Byte Ptr, SampleRam:Byte Ptr, Format: Int)
 	Function MM_DecodeParameter:Int(FileName:Byte Ptr, SIZE: Int Ptr, Hertz: Int Ptr, Channels: Int Ptr, Format: Int Ptr)
 
 	Function MM_Convert:Int ( OutBuffer:Byte Ptr, Frames:Int, Format:Int, Channels:Int, Hertz:Int, SourceBuffer:Byte Ptr, sourceSize:Int, sourceFormat:Int, sourceChannels:Int, sourceHertz:Int)
@@ -888,5 +900,4 @@ End Rem
 		Next 
 	End Method 
 End Type 
-
 
