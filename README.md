@@ -1,17 +1,14 @@
-# BlitzMax-Miniaudio-Wrapper 1.26 (2021-06-14)
+# BlitzMax-Miniaudio-Wrapper 1.27 (2021-07-09)
 a binding/wrapper for the audio library Miniaudio to the language BlitzMax  
 
 The wrapper enables to use the C-library miniaudio (https://github.com/mackron/miniaudio) in the BASIC language BlitzMax (https://blitzmax.org/)
 
-at the moment it is in Beta-state. 
-
 There is already a manual here: https://www.syntaxbomb.com/index.php/topic,8419.0.html 
 
-Now you can use the repository to download the whole module
 
 And a discussion forum here: https://www.syntaxbomb.com/index.php/topic,8388.0.html
 
-Until MiniAudio V0.10.36 will be published we still included a modified version of V 0.10.35
+The wrapper uses the MiniAudio V0.10.37. It is includes here as one file miniaudio.h
 
 ## Example
 
