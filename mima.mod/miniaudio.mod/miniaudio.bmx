@@ -6,11 +6,12 @@ about: Binding for MiniAudio for BlitzMax.
 End Rem
 Module mima.miniaudio
 ModuleInfo "Version: MiniAudio: 0.10.37"
-ModuleInfo "Version: Wrapper: 1.27"
+ModuleInfo "Version: Wrapper: 1.28"
 ModuleInfo "License: MIT(0)"
 ModuleInfo "Copyright: MINIAUDIO David Reid - mackron@gmail.com  https://miniaud.io"
 ModuleInfo "Copyright: BINDING Peter Wolkersdorfer info@midimaster.de  http://midimaster.de"
 
+ModuleInfo "History: 1.28 changed all method calls ExTAudioSample.Samples() now with brackets"
 ModuleInfo "History: 1.27 uses regular miniaudio.h 10.37 now"
 ModuleInfo "History: 1.26 now debug information appear only in DEBUG mide"
 ModuleInfo "History: 1.25 again modiefied miniaudio.h because of BlitzMax DEBUG MODE problem"
@@ -274,9 +275,9 @@ End Rem
 			
 			
 			If Format=FORMAT_S32
-				result= MM_Decode32(File.ToCString(),  Sample.Samples)			
+				result= MM_Decode32(File.ToCString(),  Sample.SampleInt)			
 			Else
-				result= MM_Decode32f(File.ToCString(),  Sample.Samples)
+				result= MM_Decode32f(File.ToCString(),  Sample.SampleFloat)
 			EndIf 
 			
 			''' xxxxx result= MM_Decode(File.ToCString(),  Sample.Samples, Format)
@@ -335,7 +336,7 @@ about: Saves a ExTAudioSample as a WAV file.
 Use #OpenWavFile() if you need to convert format or data is longer than 2GB
 End Rem
 		Method SaveExTAudioSample(FileName:String, Sample:ExTAudioSample)
-			MM_SaveWav FileName.ToCString(), Sample.Samples, Sample.Frames, Sample.Format, Sample.Channels, Sample.Hertz
+			MM_SaveWav FileName.ToCString(), Sample.Samples(), Sample.Frames, Sample.Format, Sample.Channels, Sample.Hertz
 		End Method
 
 
@@ -582,7 +583,7 @@ End Rem
 			Local FinalSize:Int = MM_Convert(Null, 0, Format, Channels, Hertz, Source.Samples, sourceSize, sourceFormat, sourceChannels, source.Hertz)
 			' now convert it :
 			Local Sample:ExTAudioSample = ExTAudioSample.Create(FinalSize, Hertz, Format, Channels)
-			MM_Convert(Sample.Samples, FinalSize, Format, Channels, Hertz, Source.Samples, sourceSize, sourceFormat, sourceChannels, source.Hertz)
+			MM_Convert(Sample.Samples(), FinalSize, Format, Channels, Hertz, Source.Samples, sourceSize, sourceFormat, sourceChannels, source.Hertz)
 			Return Sample 		
 		End Method
 
@@ -743,7 +744,7 @@ Rem
 bbdoc: Extended TAudioSample Object.
 about: Enables multichannel and 32bit FLOAT
 End Rem
-Type ExTAudioSample 'Extends TAudioSample
+Type ExTAudioSample 
 	Const FORMAT_U8:Int=1, FORMAT_S16:Int=2 ,FORMAT_S24:Int=3, FORMAT_S32:Int=4, FORMAT_F32:Int=5 
 
 	Field SampleBank:TBank, Frames:Int, Hertz:Int, Channels: Int, Capacity:Int, FrameLength:Int
