@@ -126,7 +126,7 @@ int MM_SaveWav(char* FileName, void *pPCMFramesToWrite, int frames, int format, 
 	// update 2023-11-06 parameter framesWritten is now returned different:
 	//old: int framesWritten = ma_encoder_write_pcm_frames(&encoder, pPCMFramesToWrite, frames);
 	int framesWritten; 
-	ma_encoder_write_pcm_frames(&encoder, pPCMFramesToWrite, frames, framesWritten);
+	ma_encoder_write_pcm_frames(&encoder, pPCMFramesToWrite, frames, &framesWritten);
 
 
 	ma_encoder_uninit(&encoder);
@@ -165,7 +165,7 @@ int MM_WriteEncoder(ma_encoder *encoder, void *pPCMFramesToWrite, int frames){
 	// update 2023-11-06 parameter framesWritten is now returned different:
 	//old: int framesWritten = ma_encoder_write_pcm_frames(encoder, pPCMFramesToWrite, frames);
 	int framesWritten; 
-	ma_encoder_write_pcm_frames(encoder, pPCMFramesToWrite, frames, framesWritten);
+	ma_encoder_write_pcm_frames(encoder, pPCMFramesToWrite, frames, &framesWritten);
 
 
 	DEBUG_OUTPUT("------ \n");
