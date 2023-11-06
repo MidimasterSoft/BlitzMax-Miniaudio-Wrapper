@@ -5,12 +5,13 @@ bbdoc: MiniAudio Binding
 about: Binding for MiniAudio for BlitzMax.
 End Rem
 Module mima.miniaudio
-ModuleInfo "Version: MiniAudio: 0.10.37"
-ModuleInfo "Version: Wrapper: 1.28"
+ModuleInfo "Version: MiniAudio: 0.11.18"
+ModuleInfo "Version: Wrapper: 1.31"
 ModuleInfo "License: MIT(0)"
 ModuleInfo "Copyright: MINIAUDIO David Reid - mackron@gmail.com  https://miniaud.io"
 ModuleInfo "Copyright: BINDING Peter Wolkersdorfer info@midimaster.de  http://midimaster.de"
 
+ModuleInfo "History: 1.31 changed to MiniAudio 11.18"
 ModuleInfo "History: 1.28 changed all method calls ExTAudioSample.Samples() now with brackets"
 ModuleInfo "History: 1.27 uses regular miniaudio.h 10.37 now"
 ModuleInfo "History: 1.26 now debug information appear only in DEBUG mide"
