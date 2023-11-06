@@ -1,6 +1,13 @@
 //*************************************************************************
-// version info 1.27
-// 2021-07-09: uses regular miniaudio.h 10.37 now
+// version info 1.31
+// 2023-11-06: uses regular miniaudio.h 11.18 now
+//
+// update history:
+//  1. removed all  "MA_LOG_LEVEL..." things
+//  2. changed all "ma_resource_format_wav"    to  "ma_encoding_format_wav"
+//  3. changed all "ma_device_callback_proc"   to  "ma_device_data_proc"
+//  4. changed return value method in  "ma_encoder_write_pcm_frames"  to BYVAR 
+//
 // this code is public domain
 // author: Peter Wolkersdorfer www.midimaster
 // thanks to col from https://github.com/davecamp
@@ -87,9 +94,10 @@ void mimaOnMAThreadExit() {
 
 #define MINIAUDIO_IMPLEMENTATION
 #define MA_API extern
- 
-#define MA_LOG_LEVEL_INFO 4
-#define MA_LOG_LEVEL MA_LOG_LEVEL_INFO
+
+// edit 2023-11-06 no langer avaiable: 
+//#define MA_LOG_LEVEL_INFO 4
+//#define MA_LOG_LEVEL MA_LOG_LEVEL_INFO
 
 #include "miniaudio.h"
 
@@ -107,14 +115,20 @@ void mimaOnMAThreadExit() {
 int MM_SaveWav(char* FileName, void *pPCMFramesToWrite, int frames, int format, int channels, int hertz){
 	DEBUG_OUTPUT("MM ENCODER WAV ONE PASS \n");
 
-	ma_encoder_config config = ma_encoder_config_init(ma_resource_format_wav, format, channels, hertz);
+	ma_encoder_config config = ma_encoder_config_init(ma_encoding_format_wav, format, channels, hertz);
 	ma_encoder encoder;
 	ma_result result = ma_encoder_init_file(FileName, &config, &encoder);
 	if (result != MA_SUCCESS) {
 		DEBUG_OUTPUT("ERROR while defining WAV file \n");
 		return 0;
 	}
-	int framesWritten = ma_encoder_write_pcm_frames(&encoder, pPCMFramesToWrite, frames);
+
+	// update 2023-11-06 parameter framesWritten is now returned different:
+	//old: int framesWritten = ma_encoder_write_pcm_frames(&encoder, pPCMFramesToWrite, frames);
+	int framesWritten; 
+	ma_encoder_write_pcm_frames(&encoder, pPCMFramesToWrite, frames, framesWritten);
+
+
 	ma_encoder_uninit(&encoder);
 	DEBUG_OUTPUT("------ \n");
 	return 1;
@@ -127,7 +141,7 @@ int MM_SaveWav(char* FileName, void *pPCMFramesToWrite, int frames, int format, 
 struct ma_encoder  *MM_GetEncoder(char* FileName, int format, int channels, int hertz){
 	DEBUG_OUTPUT("MM GET ENCODER WAV \n");
 
-	ma_encoder_config config = ma_encoder_config_init(ma_resource_format_wav, format, channels, hertz);
+	ma_encoder_config config = ma_encoder_config_init(ma_encoding_format_wav, format, channels, hertz);
 	struct ma_encoder *encoder;
 	int length = sizeof(struct ma_encoder);
 	encoder = (struct ma_encoder*) malloc(length);
@@ -148,8 +162,13 @@ struct ma_encoder  *MM_GetEncoder(char* FileName, int format, int channels, int 
 int MM_WriteEncoder(ma_encoder *encoder, void *pPCMFramesToWrite, int frames){
 	DEBUG_OUTPUT("MM WRITE TO ENCODER WAV \n");
 
-	int framesWritten = ma_encoder_write_pcm_frames(encoder, pPCMFramesToWrite, frames);
-		DEBUG_OUTPUT("------ \n");
+	// update 2023-11-06 parameter framesWritten is now returned different:
+	//old: int framesWritten = ma_encoder_write_pcm_frames(encoder, pPCMFramesToWrite, frames);
+	int framesWritten; 
+	ma_encoder_write_pcm_frames(encoder, pPCMFramesToWrite, frames, framesWritten);
+
+
+	DEBUG_OUTPUT("------ \n");
 	return 1;
 }
 
@@ -333,7 +352,9 @@ struct ma_device_config *ma_device_config_init_glue(struct ma_context *context, 
 
 
 // Device Filler:
-void MM_SetDeviceConfig (struct ma_device_config *config, int playformat, int playchannels, int captformat, int captchannels, int hertz, ma_device_callback_proc Callback) {
+// update 2023-11-06: changed naming "ma_device_callback_proc"
+//    void MM_SetDeviceConfig (struct ma_device_config *config, int playformat, int playchannels, int captformat, int captchannels, int hertz, ma_device_callback_proc Callback) {
+void MM_SetDeviceConfig (struct ma_device_config *config, int playformat, int playchannels, int captformat, int captchannels, int hertz, ma_device_data_proc Callback) {
 	DEBUG_OUTPUT("FILL_VALUE_B \n");
 	config->sampleRate        = hertz;
 	config->playback.format   = playformat;
